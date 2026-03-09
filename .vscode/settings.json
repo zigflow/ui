@@ -8,6 +8,7 @@
       ".github/workflows/*.{yml,yaml}"
     ]
   },
+  "prettier.prettierPath": "node_modules/prettier/index.cjs",
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
