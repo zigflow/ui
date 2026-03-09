@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
+ * Copyright 2025 - 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import adapter from '@sveltejs/adapter-node';
 
-import adapter from '@sveltejs/adapter-static';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-
-/** @type {import('@sveltejs/vite-plugin-svelte').Config} */
+/** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
-	// for more information about preprocessors
-	preprocess: vitePreprocess(),
+  compilerOptions: {
+    runes: true,
+  },
 
-	kit: {
-		// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
-		// If your environment is not supported or you settled on a specific environment, switch out the adapter.
-		// See https://kit.svelte.dev/docs/adapters for more information about adapters.
-		adapter: adapter({
-			fallback: '404.html',
-		}),
-	},
+  kit: {
+    adapter: adapter(),
+  },
 };
 
 export default config;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
+ * Copyright 2025 - 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { redirect } from '@sveltejs/kit';
 
-// Settings useful for statically generated sites
-export const prerender = true;
-export const ssr = true;
-export const trailingSlash = 'always';
+import type { PageLoad } from './$types';
+
+export const load: PageLoad = () => {
+  redirect(307, '/workflows');
+};

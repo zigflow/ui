@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
+ * Copyright 2025 - 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import type { PageLoad } from './$types';
 
-import { describe, expect, it } from 'vitest';
-
-describe('sum test', () => {
-	it('adds 1 + 2 to equal 3', () => {
-		expect(1 + 2).toBe(3);
-	});
-});
+export const load: PageLoad = ({ data, params, url }) => {
+  const selected = url.searchParams.get('selected');
+  const selectedSegments = selected ? selected.split('/').filter(Boolean) : [];
+  return {
+    ...data,
+    workflowId: params.workflowId,
+    selectedSegments,
+  };
+};

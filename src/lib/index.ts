@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
+ * Copyright 2025 - 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,4 +14,10 @@
  * limitations under the License.
  */
 
-// place files you want to import through the `$lib` alias in this folder.
+// Re-exports the canonical IR types, mutation helpers, validation, and
+// YAML exporter. Import via the $lib alias in Svelte components and routes.
+
+export * from './tasks/model';
+export * from './tasks/actions';
+export * from './tasks/validation';
+export * from './export/yaml';

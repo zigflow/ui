@@ -1,7 +1,11 @@
 {
   "image": "ghcr.io/mrsimonemms/devcontainers/full",
   "name": "devcontainer",
-  "features": {},
+  "features": {
+    "ghcr.io/dhoeric/features/trivy:1": {},
+    "ghcr.io/devcontainers-extra/features/go-task:1": {},
+    "ghcr.io/rio/features/skaffold:2": {}
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -11,7 +15,15 @@
       "settings": {}
     }
   },
+  "postCreateCommand": {
+    "playwright": "npx --yes playwright install --with-deps"
+  },
   "containerEnv": {
-    "VITE_HOST": "0.0.0.0"
-  }
+    "PLAYWRIGHT_HTML_HOST": "0.0.0.0",
+    "PUBLIC_WORKFLOWS_DIR": "/workspaces/studio/workflows",
+    "HOST": "0.0.0.0"
+  },
+  "forwardPorts": [
+    5173
+  ]
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
+ * Copyright 2025 - 2026 Zigflow authors <https://github.com/zigflow/ui/graphs/contributors>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [sveltekit()],
-	server: {
-		host: process.env.VITE_HOST,
-		port: Number(process.env.VITE_PORT ?? 5173),
-	},
-	test: {
-		include: ['src/**/*.{test,spec}.{js,ts}'],
-	},
+  plugins: [sveltekit()],
+  server: {
+    host: process.env.HOST ?? '0.0.0.0',
+    port: Number(process.env.PORT ?? 5173),
+  },
 });
