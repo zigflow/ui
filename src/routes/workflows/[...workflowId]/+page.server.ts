@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { env } from '$env/dynamic/public';
 import { exportToYaml } from '$lib/export/yaml';
+import { WORKFLOWS_DIR } from '$lib/server/workflows-dir';
 import { parseWorkflowFile } from '$lib/tasks/parse';
 import { error } from '@sveltejs/kit';
-import { promises as fs } from 'fs';
-import { resolve } from 'path';
+import { promises as fs } from 'node:fs';
+import { resolve } from 'node:path';
 
 import type { PageServerLoad } from './$types';
-
-const WORKFLOWS_DIR =
-  env.PUBLIC_WORKFLOWS_DIR ?? resolve(process.cwd(), 'workflows');
 
 export const load: PageServerLoad = async ({ params }) => {
   const fileName = params.workflowId;
