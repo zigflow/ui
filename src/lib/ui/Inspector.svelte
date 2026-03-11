@@ -15,6 +15,7 @@
   -->
 
 <script lang="ts">
+  import { t } from '$lib/i18n/index.svelte';
   import type { Node } from '$lib/tasks/model';
 
   // ---------------------------------------------------------------------------
@@ -109,7 +110,7 @@
 
 <aside class="inspector">
   {#if node === null}
-    <p class="inspector-empty">Select a node to inspect it.</p>
+    <p class="inspector-empty">{t('inspector.empty')}</p>
   {:else}
     <header class="inspector-header">
       <span class="inspector-type">{node.type}</span>
@@ -118,23 +119,23 @@
 
     <section class="inspector-section">
       <dl>
-        <dt>ID</dt>
+        <dt>{t('inspector.id')}</dt>
         <dd class="mono">{node.id}</dd>
 
         {#if node.type === 'task'}
-          <dt>Kind</dt>
+          <dt>{t('inspector.kind')}</dt>
           <dd>{node.config.kind}</dd>
-          <dt>Detail</dt>
+          <dt>{t('inspector.detail')}</dt>
           <dd>{configSummary(node)}</dd>
           {#if node.if}
-            <dt>Condition</dt>
+            <dt>{t('inspector.condition')}</dt>
             <dd class="mono">{node.if}</dd>
           {/if}
         {:else}
-          <dt>Structure</dt>
+          <dt>{t('inspector.structure')}</dt>
           <dd>{structuralSummary(node)}</dd>
           {#if node.if}
-            <dt>Condition</dt>
+            <dt>{t('inspector.condition')}</dt>
             <dd class="mono">{node.if}</dd>
           {/if}
         {/if}
@@ -148,7 +149,7 @@
 
     {#if node.type === 'switch' || node.type === 'fork'}
       <section class="inspector-branches">
-        <h3 class="inspector-section-title">Branches</h3>
+        <h3 class="inspector-section-title">{t('inspector.branches')}</h3>
         <ul class="branch-list" role="list">
           {#each node.branches as branch (branch.id)}
             <li class="branch-item">
@@ -164,7 +165,9 @@
                   class="branch-remove-btn"
                   onclick={() => onremovebranch?.(node.id, branch.id)}
                   type="button"
-                  aria-label="Remove branch {branch.label}"
+                  aria-label={t('inspector.removeBranch', {
+                    label: branch.label,
+                  })}
                 >
                   ✕
                 </button>
@@ -177,19 +180,19 @@
           onclick={() => onaddbranch?.(node.id)}
           type="button"
         >
-          + Add branch
+          {t('inspector.addBranch')}
         </button>
       </section>
     {:else if node.type === 'try'}
       <section class="inspector-branches">
-        <h3 class="inspector-section-title">Sections</h3>
+        <h3 class="inspector-section-title">{t('inspector.sections')}</h3>
         <div class="try-sections">
           <button
             class="try-section-btn"
             onclick={() => onenterbranch?.(node.id, 'tryGraph')}
             type="button"
           >
-            Enter try body
+            {t('inspector.enterTryBody')}
           </button>
           {#if node.catchGraph !== undefined}
             <button
@@ -197,7 +200,7 @@
               onclick={() => onenterbranch?.(node.id, 'catchGraph')}
               type="button"
             >
-              Enter catch block
+              {t('inspector.enterCatchBlock')}
             </button>
           {:else}
             <button
@@ -205,7 +208,7 @@
               onclick={() => onaddcatch?.(node.id)}
               type="button"
             >
-              + Add catch block
+              {t('inspector.addCatchBlock')}
             </button>
           {/if}
         </div>
@@ -217,11 +220,11 @@
           onclick={() => onenternode?.(node.id)}
           type="button"
         >
-          Enter loop body
+          {t('inspector.enterLoopBody')}
         </button>
       </section>
     {:else}
-      <p class="inspector-hint">Full editing UI coming soon.</p>
+      <p class="inspector-hint">{t('inspector.comingSoon')}</p>
     {/if}
 
     <div class="move-row">
@@ -230,23 +233,23 @@
         disabled={!canMoveUp}
         onclick={() => onmoveup?.()}
         type="button"
-        aria-label="Move task up"
+        aria-label={t('inspector.moveUpLabel')}
       >
-        ↑ Move up
+        {t('inspector.moveUp')}
       </button>
       <button
         class="move-btn"
         disabled={!canMoveDown}
         onclick={() => onmovedown?.()}
         type="button"
-        aria-label="Move task down"
+        aria-label={t('inspector.moveDownLabel')}
       >
-        ↓ Move down
+        {t('inspector.moveDown')}
       </button>
     </div>
 
     <button class="delete-btn" onclick={() => ondelete?.()} type="button">
-      Delete task
+      {t('inspector.delete')}
     </button>
   {/if}
 </aside>

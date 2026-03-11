@@ -10,6 +10,7 @@ repos:
         args:
           - --autofix
           - --no-sort-keys
+          - --no-ensure-ascii
       - id: check-json
       - id: check-yaml
         exclude: charts

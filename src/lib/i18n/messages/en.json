@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "Zigflow Studio"
+  },
+  "workflows": {
+    "title": "Workflows",
+    "empty": "No workflow files found.",
+    "newPlaceholder": "workflow-name",
+    "newButton": "New workflow"
+  },
+  "editor": {
+    "saving": "Saving…",
+    "saved": "Saved",
+    "unsaved": "Unsaved changes",
+    "saveFailed": "Save failed",
+    "save": "Save",
+    "language": "Language",
+    "localeEn": "English (International)",
+    "localeEnGb": "English (British)",
+    "exportYaml": "Export YAML",
+    "noGraph": "No graph to display.",
+    "exportDialog": "YAML export"
+  },
+  "export": {
+    "title": "Exported YAML",
+    "close": "Close"
+  },
+  "inspector": {
+    "empty": "Select a node to inspect it.",
+    "id": "ID",
+    "kind": "Kind",
+    "detail": "Detail",
+    "condition": "Condition",
+    "structure": "Structure",
+    "branches": "Branches",
+    "removeBranch": "Remove branch {{label}}",
+    "addBranch": "+ Add branch",
+    "sections": "Sections",
+    "enterTryBody": "Enter try body",
+    "enterCatchBlock": "Enter catch block",
+    "addCatchBlock": "+ Add catch block",
+    "enterLoopBody": "Enter loop body",
+    "comingSoon": "Full editing UI coming soon.",
+    "moveUp": "↑ Move up",
+    "moveUpLabel": "Move task up",
+    "moveDown": "↓ Move down",
+    "moveDownLabel": "Move task down",
+    "delete": "Delete task"
+  },
+  "sidebar": {
+    "document": "Document",
+    "workflows": "Workflows",
+    "addWorkflow": "+ Add workflow",
+    "tasks": "Tasks",
+    "controlFlow": "Control flow"
+  },
+  "canvas": {
+    "ariaLabel": "Workflow canvas",
+    "tryBody": "try body",
+    "catchBlock": "catch block",
+    "loopBody": "body"
+  }
+}

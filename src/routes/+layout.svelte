@@ -16,15 +16,54 @@
 
 <script lang="ts">
   import favicon from '$lib/assets/favicon.ico';
+  import { initI18n, t } from '$lib/i18n/index.svelte';
+  import type { Locale } from '$lib/i18n/locales';
+  import { onMount } from 'svelte';
 
-  let { children } = $props();
+  import type { LayoutProps } from './$types';
+
+  let { data, children }: LayoutProps = $props();
+
+  let localeOverride = $state<Locale | null>(null);
+  let currentLocale = $derived<Locale>(
+    (localeOverride ?? data.locale) as Locale,
+  );
+
+  // Initialise i18next client-side with the locale resolved by the server.
+  // Using onMount avoids hydration mismatches: SSR renders keys which Svelte
+  // patches to translated strings after mount.
+  onMount(() => {
+    initI18n(data.locale);
+  });
+
+  function handleLocaleChange(e: Event): void {
+    const newLocale = (e.target as HTMLSelectElement).value as Locale;
+    localeOverride = newLocale;
+    document.cookie = `studio_locale=${newLocale}; path=/; max-age=31536000`;
+    initI18n(newLocale);
+  }
 </script>
 
 <svelte:head>
   <link rel="icon" href={favicon} />
 </svelte:head>
 
-{@render children()}
+<div class="app-shell">
+  <div class="app-content">
+    {@render children()}
+  </div>
+  <footer class="app-footer">
+    <select
+      class="locale-select"
+      aria-label={t('editor.language')}
+      value={currentLocale}
+      onchange={handleLocaleChange}
+    >
+      <option value="en">{t('editor.localeEn')}</option>
+      <option value="en-GB">{t('editor.localeEnGb')}</option>
+    </select>
+  </footer>
+</div>
 
 <style>
   :global(html),
@@ -33,5 +72,36 @@
     padding: 0;
     height: 100%;
     overflow: hidden;
+  }
+
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .app-content {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .app-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0.25rem 0.75rem;
+    border-top: 1px solid #eee;
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  .locale-select {
+    padding: 0.2rem 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 0.75rem;
+    color: #444;
+    cursor: pointer;
   }
 </style>

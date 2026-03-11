@@ -15,6 +15,7 @@
 -->
 
 <script lang="ts">
+  import { t } from '$lib/i18n/index.svelte';
   import type { WorkflowFile } from '$lib/tasks/model';
   import { TASK_REGISTRY } from '$lib/tasks/registry';
 
@@ -48,7 +49,7 @@
 <nav class="sidebar">
   <!-- Document metadata -->
   <header class="sidebar-header">
-    <p class="sidebar-label">Document</p>
+    <p class="sidebar-label">{t('sidebar.document')}</p>
     <h1 class="sidebar-doc-name">{file.document.name}</h1>
     <p class="sidebar-doc-meta">
       {file.document.namespace} · v{file.document.version}
@@ -57,7 +58,7 @@
 
   <!-- Workflow list -->
   <section class="sidebar-section">
-    <p class="sidebar-label">Workflows</p>
+    <p class="sidebar-label">{t('sidebar.workflows')}</p>
     <ul class="workflow-list">
       {#each file.order as id (id)}
         {@const wf = file.workflows[id]}
@@ -81,13 +82,13 @@
       onclick={() => onaddworkflow?.()}
       type="button"
     >
-      + Add workflow
+      {t('sidebar.addWorkflow')}
     </button>
   </section>
 
   <!-- Task palette -->
   <section class="sidebar-section palette-section">
-    <p class="sidebar-label">Tasks</p>
+    <p class="sidebar-label">{t('sidebar.tasks')}</p>
     <ul class="palette-list">
       {#each taskItems as def (def.type)}
         <li>
@@ -105,7 +106,7 @@
       {/each}
     </ul>
 
-    <p class="sidebar-label palette-label-gap">Control flow</p>
+    <p class="sidebar-label palette-label-gap">{t('sidebar.controlFlow')}</p>
     <ul class="palette-list">
       {#each controlItems as def (def.type)}
         <li>
