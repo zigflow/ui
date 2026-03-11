@@ -17,6 +17,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import { exportToYaml } from '$lib/export/yaml';
+  import { t } from '$lib/i18n/index.svelte';
   import {
     addForkBranch,
     addSwitchBranch,
@@ -909,25 +910,22 @@
       <div class="topbar-actions">
         <span class="save-status" data-testid="save-status">
           {#if saveStatus === 'saving'}
-            Saving…
+            {t('editor.saving')}
           {:else if saveStatus === 'saved'}
-            Saved
+            {t('editor.saved')}
           {:else if saveStatus === 'dirty'}
-            Unsaved changes
+            {t('editor.unsaved')}
           {:else if saveStatus === 'error'}
-            <span title={lastSaveError}>Save failed</span>
+            <span title={lastSaveError}>{t('editor.saveFailed')}</span>
           {/if}
         </span>
-        <button
-          class="save-btn"
-          onclick={handleSave}
-          disabled={saveStatus !== 'dirty' && saveStatus !== 'error'}
-          type="button"
-        >
-          Save
-        </button>
+        {#if saveStatus === 'error'}
+          <button class="save-btn" onclick={handleSave} type="button">
+            {t('editor.save')}
+          </button>
+        {/if}
         <button class="export-btn" onclick={handleExport} type="button">
-          Export YAML
+          {t('editor.exportYaml')}
         </button>
       </div>
     </div>
@@ -945,7 +943,7 @@
           onenterbranch={handleEnterBranch}
         />
       {:else}
-        <div class="canvas-placeholder">No graph to display.</div>
+        <div class="canvas-placeholder">{t('editor.noGraph')}</div>
       {/if}
 
       <Inspector
@@ -971,18 +969,18 @@
     class="export-overlay"
     role="dialog"
     aria-modal="true"
-    aria-label="YAML export"
+    aria-label={t('editor.exportDialog')}
   >
     <div class="export-dialog">
       <div class="export-dialog-header">
-        <h2>Exported YAML</h2>
+        <h2>{t('export.title')}</h2>
         <button
           class="export-close-btn"
           onclick={() => {
             showExport = false;
           }}
           type="button"
-          aria-label="Close">✕</button
+          aria-label={t('export.close')}>✕</button
         >
       </div>
       {#if exportError}
@@ -996,7 +994,7 @@
 
 <style>
   .editor-root {
-    height: 100vh;
+    height: 100%;
     display: flex;
     overflow: hidden;
     font-family: system-ui, sans-serif;

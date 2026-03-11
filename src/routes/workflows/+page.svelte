@@ -16,6 +16,7 @@
 
 <script lang="ts">
   import { resolve } from '$app/paths';
+  import { t } from '$lib/i18n/index.svelte';
 
   import type { PageProps } from './$types';
 
@@ -23,7 +24,7 @@
 </script>
 
 <div class="workflows-page">
-  <h1>Workflows</h1>
+  <h1>{t('workflows.title')}</h1>
 
   {#if data.workflowFiles.length > 0}
     <ul class="workflow-list">
@@ -36,7 +37,7 @@
       {/each}
     </ul>
   {:else}
-    <p class="empty">No workflow files found.</p>
+    <p class="empty">{t('workflows.empty')}</p>
   {/if}
 
   <form method="POST" class="new-workflow-form">
@@ -44,10 +45,10 @@
       class="name-input"
       name="name"
       type="text"
-      placeholder="workflow-name"
+      placeholder={t('workflows.newPlaceholder')}
       required
     />
-    <button class="new-btn" type="submit">New workflow</button>
+    <button class="new-btn" type="submit">{t('workflows.newButton')}</button>
   </form>
 </div>
 

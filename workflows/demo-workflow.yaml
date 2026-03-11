@@ -54,6 +54,11 @@ do:
             do: []
             metadata:
               __zigflow_id: e4879bd8-ed9e-4955-bff1-33490e86e5f7
+        - wait:
+            wait:
+              seconds: 30
+            metadata:
+              __zigflow_id: 1b9eeddd-d06c-4788-b855-22a0faf52523
   - route-fast-path:
       do: []
   - route-default:

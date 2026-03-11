@@ -15,6 +15,7 @@
   -->
 
 <script lang="ts">
+  import { t } from '$lib/i18n/index.svelte';
   import type { FlowGraph, Node, NodeType } from '$lib/tasks/model';
   import { Background, Controls, SvelteFlow } from '@xyflow/svelte';
   import '@xyflow/svelte/dist/style.css';
@@ -164,15 +165,19 @@
     }
     if (node.type === 'try') {
       const rows: NavRow[] = [
-        { id: 'tryGraph', label: 'try body', kind: 'branch' },
+        { id: 'tryGraph', label: t('canvas.tryBody'), kind: 'branch' },
       ];
       if (node.catchGraph !== undefined) {
-        rows.push({ id: 'catchGraph', label: 'catch block', kind: 'branch' });
+        rows.push({
+          id: 'catchGraph',
+          label: t('canvas.catchBlock'),
+          kind: 'branch',
+        });
       }
       return rows;
     }
     if (node.type === 'loop') {
-      return [{ id: 'body', label: 'body', kind: 'enter' }];
+      return [{ id: 'body', label: t('canvas.loopBody'), kind: 'enter' }];
     }
     return [];
   }
@@ -300,7 +305,7 @@
 <div
   class="canvas-root"
   role="region"
-  aria-label="Workflow canvas"
+  aria-label={t('canvas.ariaLabel')}
   ondragover={handleDragOver}
   ondrop={handleDrop}
 >

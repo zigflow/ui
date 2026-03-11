@@ -38,6 +38,7 @@ tooling over novelty or abstraction.
 - **Runtime:** Node.js (Docker)
 - **Linting:** ESLint (flat config)
 - **Formatting:** Prettier (project-defined config)
+- **i18n:** i18next (required)
 
 Do not:
 
@@ -46,6 +47,70 @@ Do not:
 - Introduce utility-first CSS systems
 - Bypass TypeScript with `any` unless unavoidable and documented
 - Add alternative formatters or linters
+
+---
+
+## Internationalisation (i18n) requirements (mandatory)
+
+This project **must** use an established i18n library, not a custom implementation.
+
+### Library
+
+- Use **i18next** with a Svelte-compatible integration (do not build our own
+  i18n layer).
+- Keep translations in JSON resource files.
+- Prefer **literal Unicode characters** in i18n JSON (e.g. `…`, `£`, `→`)
+  over HTML entities (e.g. `&hellip;`) or escaped codepoints (e.g. `\u2026`)
+  unless a tool forces escaping.
+
+### Supported locales (for now)
+
+- `en` (English, International) — default
+- `en-GB` (English, British)
+
+### Locale selection priority (authoritative)
+
+1. User-selected locale in the UI (persisted)
+2. Browser language headers (e.g. `navigator.languages`)
+3. Fallback to `en`
+
+### Fallback behaviour
+
+- `en-GB` **must** fall back to `en` for missing keys so British English only
+  needs to override deltas.
+- Do not duplicate `en` strings into `en-GB` unless the wording/spelling
+  genuinely differs.
+
+### Hard rule: no new plain text in the UI
+
+- **Do not introduce new user-visible strings inline** in Svelte components,
+  stores, routes, or helpers.
+- Any new user-visible text **must** be added as an i18n string key and rendered
+  via `t(...)`.
+- This includes:
+  - Button labels, headings, breadcrumbs, empty states
+  - Toasts, alerts, errors shown to users
+  - Inspector labels and field names
+  - Modal titles and helper text
+
+Allowed exceptions (narrow):
+
+- User data (workflow names, task names, branch labels, etc.)
+- Debug-only `console.*` output (must not be user-facing)
+
+### Key naming + structure guidance
+
+- Use a predictable, boring hierarchy (e.g. `editor.*`, `sidebar.*`, `inspector.*`,
+  `errors.*`, `actions.*`).
+- Prefer stable keys over copy-based keys (do not bake full sentences into key
+  names).
+- Keep strings short and composable where it helps reuse, but do not over-abstract.
+
+### Testing expectation
+
+- Any feature work that introduces UI text must include the corresponding `en` key.
+- If a string is British-specific, add it to `en-GB`; otherwise only `en` is
+  required.
 
 ---
 
@@ -210,6 +275,8 @@ Validation errors must be:
 - Inspector panels edit **node config**, not graph topology
 - UI must reflect validation state clearly
 - Avoid auto-magic graph rewrites
+- All user-visible UI strings must come from i18n resources via `t(...)` (no
+  inline copy).
 
 ---
 
@@ -454,3 +521,5 @@ When asked to “build” something:
 
 - Start with the smallest viable, end-to-end slice
 - Prefer scaffolding that can grow over finished-looking systems
+- Add or extend tests to lock in behaviour
+- All new user-visible UI text must use i18n (i18next), not inline strings
