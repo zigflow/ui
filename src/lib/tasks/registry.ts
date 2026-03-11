@@ -56,12 +56,13 @@ function emptyGraph(): FlowGraph {
 }
 
 function taskNode(name: string, type: NodeType): TaskNode {
+  const nid = id();
   return {
-    id: id(),
+    id: nid,
     type: 'task',
     name,
     config: defaultConfig(type),
-    metadata: { __zigflow_id: id() },
+    metadata: { __zigflow_id: nid },
   } as TaskNode;
 }
 
@@ -197,53 +198,65 @@ export const TASK_REGISTRY: readonly TaskDefinition[] = [
     label: 'Switch',
     category: 'control',
     description: 'Branch on a condition',
-    create: (): SwitchNode => ({
-      id: id(),
-      type: 'switch',
-      name: 'switch',
-      branches: [],
-      metadata: { __zigflow_id: id() },
-    }),
+    create: (): SwitchNode => {
+      const nid = id();
+      return {
+        id: nid,
+        type: 'switch',
+        name: 'switch',
+        branches: [],
+        metadata: { __zigflow_id: nid },
+      };
+    },
   },
   {
     type: 'fork',
     label: 'Fork',
     category: 'control',
     description: 'Run branches in parallel',
-    create: (): ForkNode => ({
-      id: id(),
-      type: 'fork',
-      name: 'fork',
-      compete: false,
-      branches: [],
-      metadata: { __zigflow_id: id() },
-    }),
+    create: (): ForkNode => {
+      const nid = id();
+      return {
+        id: nid,
+        type: 'fork',
+        name: 'fork',
+        compete: false,
+        branches: [],
+        metadata: { __zigflow_id: nid },
+      };
+    },
   },
   {
     type: 'try',
     label: 'Try / Catch',
     category: 'control',
     description: 'Execute with error handling',
-    create: (): TryNode => ({
-      id: id(),
-      type: 'try',
-      name: 'try-catch',
-      tryGraph: emptyGraph(),
-      metadata: { __zigflow_id: id() },
-    }),
+    create: (): TryNode => {
+      const nid = id();
+      return {
+        id: nid,
+        type: 'try',
+        name: 'try-catch',
+        tryGraph: emptyGraph(),
+        metadata: { __zigflow_id: nid },
+      };
+    },
   },
   {
     type: 'loop',
     label: 'Loop',
     category: 'control',
     description: 'Iterate over a collection',
-    create: (): LoopNode => ({
-      id: id(),
-      type: 'loop',
-      name: 'loop',
-      in: '$.',
-      bodyGraph: emptyGraph(),
-      metadata: { __zigflow_id: id() },
-    }),
+    create: (): LoopNode => {
+      const nid = id();
+      return {
+        id: nid,
+        type: 'loop',
+        name: 'loop',
+        in: '$.',
+        bodyGraph: emptyGraph(),
+        metadata: { __zigflow_id: nid },
+      };
+    },
   },
 ];

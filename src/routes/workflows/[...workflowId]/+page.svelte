@@ -66,6 +66,81 @@
   let workflowFile = $state<WorkflowFile>(untrack(() => data.workflowFile));
 
   // ---------------------------------------------------------------------------
+  // Save state machine
+  // ---------------------------------------------------------------------------
+
+  type SaveStatus = 'idle' | 'dirty' | 'saving' | 'saved' | 'error';
+
+  let saveStatus = $state<SaveStatus>('idle');
+  let lastSaveError = $state<string | undefined>(undefined);
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
+  let savePending = false;
+
+  // Derive the workflow file name from route data. Using $derived avoids
+  // capturing a stale closure over `data` that Svelte would warn about.
+  const wfFileName = $derived(data.workflowId);
+
+  function markDirty(): void {
+    saveStatus = 'dirty';
+    scheduleSave();
+  }
+
+  function scheduleSave(): void {
+    if (saveTimer !== null) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+    if (saveStatus === 'saving') {
+      // Another save is running; remember to run again once it finishes.
+      savePending = true;
+      return;
+    }
+    saveTimer = setTimeout(() => {
+      saveTimer = null;
+      doSave();
+    }, 300);
+  }
+
+  async function doSave(): Promise<void> {
+    saveStatus = 'saving';
+    savePending = false;
+    const fileName = wfFileName;
+    const snapshot = $state.snapshot(workflowFile);
+    try {
+      const res = await fetch(
+        `/api/workflows/${encodeURIComponent(fileName)}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workflowFile: snapshot }),
+        },
+      );
+      const result = (await res.json()) as { ok: boolean; error?: string };
+      if (result.ok) {
+        saveStatus = savePending ? 'dirty' : 'saved';
+        if (savePending) scheduleSave();
+      } else {
+        saveStatus = 'error';
+        lastSaveError = result.error ?? 'Unknown error';
+        if (savePending) scheduleSave();
+      }
+    } catch (err) {
+      saveStatus = 'error';
+      lastSaveError = String(err);
+      if (savePending) scheduleSave();
+    }
+  }
+
+  function handleSave(): void {
+    if (saveStatus !== 'dirty' && saveStatus !== 'error') return;
+    if (saveTimer !== null) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+    doSave();
+  }
+
+  // ---------------------------------------------------------------------------
   // Query param ↔ GraphPath sync
   //
   // Param format: ?selected=<segment1>/<segment2>/...
@@ -561,6 +636,7 @@
 
   function handleAddWorkflow(): void {
     workflowFile = addWorkflow(workflowFile, 'new-workflow');
+    markDirty();
     const newId = workflowFile.order[workflowFile.order.length - 1]!;
     selectedWorkflowId = newId;
     graphPath = { workflowId: newId, segments: [] };
@@ -648,6 +724,7 @@
   // Insert a new node into the currently active graph (Step 5 wiring).
   function handleInsert(nodeType: NodeType) {
     workflowFile = insertNodeAtPath(workflowFile, graphPath, nodeType);
+    markDirty();
   }
 
   // Apply a pure FlowGraph transform at the current graphPath, threading the
@@ -655,6 +732,7 @@
   function updateCurrentGraph(transform: (g: FlowGraph) => FlowGraph): void {
     try {
       workflowFile = updateGraphAtPath(workflowFile, graphPath, transform);
+      markDirty();
     } catch (err) {
       console.error('updateCurrentGraph failed:', err);
     }
@@ -773,7 +851,21 @@
       inspectorOpen = parsed.selectedNodeId !== null;
     }
     window.addEventListener('popstate', handlePopstate);
-    return () => window.removeEventListener('popstate', handlePopstate);
+
+    function handleKeydown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (saveStatus === 'dirty' || saveStatus === 'error') {
+          handleSave();
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeydown);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopstate);
+      window.removeEventListener('keydown', handleKeydown);
+    };
   });
 
   // Expose navigation helpers so child components can invoke them in future.
@@ -814,9 +906,30 @@
   <div class="editor-main">
     <div class="editor-topbar">
       <Breadcrumb crumbs={breadcrumbs} onnavigate={handleNavigate} />
-      <button class="export-btn" onclick={handleExport} type="button">
-        Export YAML
-      </button>
+      <div class="topbar-actions">
+        <span class="save-status" data-testid="save-status">
+          {#if saveStatus === 'saving'}
+            Saving…
+          {:else if saveStatus === 'saved'}
+            Saved
+          {:else if saveStatus === 'dirty'}
+            Unsaved changes
+          {:else if saveStatus === 'error'}
+            <span title={lastSaveError}>Save failed</span>
+          {/if}
+        </span>
+        <button
+          class="save-btn"
+          onclick={handleSave}
+          disabled={saveStatus !== 'dirty' && saveStatus !== 'error'}
+          type="button"
+        >
+          Save
+        </button>
+        <button class="export-btn" onclick={handleExport} type="button">
+          Export YAML
+        </button>
+      </div>
     </div>
 
     <ContextIndicator label={contextLabel} />
@@ -903,6 +1016,40 @@
     border-bottom: 1px solid #eee;
     background: #fff;
     padding-right: 1rem;
+  }
+
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .save-status {
+    font-size: 0.75rem;
+    color: #888;
+    white-space: nowrap;
+  }
+
+  .save-btn {
+    padding: 0.3rem 0.75rem;
+    background: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .save-btn:hover:not(:disabled) {
+    background: #f5f5f5;
+    border-color: #aaa;
+  }
+
+  .save-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
 
   .export-btn {
