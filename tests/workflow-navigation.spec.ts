@@ -96,4 +96,52 @@ test.describe('Workflow navigation invariants', () => {
     // Inspector should reopen after popstate restores a selected node.
     await expect(page.locator('.inspector-name')).toHaveValue('greet');
   });
+
+  test('entering loop body updates URL to loopNodeId/body', async ({
+    page,
+  }) => {
+    await page.goto(WORKFLOW);
+    await page
+      .locator('.svelte-flow__node')
+      .first()
+      .waitFor({ state: 'visible', timeout: 10_000 });
+
+    // Click the loop body nav row on the "process-items" loop node.
+    await page.getByText('process-items').click();
+    await page.getByRole('button', { name: 'Enter loop body' }).click();
+
+    const url = new URL(page.url());
+    const selected = url.searchParams.get('selected');
+
+    expect(selected).toBeTruthy();
+    const segments = selected!.split('/');
+    expect(segments.length).toBe(2);
+    expect(segments[1]).toBe('body');
+  });
+
+  test('loop body deep link renders body graph on refresh', async ({
+    page,
+  }) => {
+    await page.goto(WORKFLOW);
+    await page
+      .locator('.svelte-flow__node')
+      .first()
+      .waitFor({ state: 'visible', timeout: 10_000 });
+
+    // Navigate into the loop body.
+    await page.getByText('process-items').click();
+    await page.getByRole('button', { name: 'Enter loop body' }).click();
+    const deepLink = page.url();
+
+    // Reload at the deep link and confirm we are still inside the body.
+    await page.reload();
+    await page
+      .locator('.svelte-flow__node')
+      .first()
+      .waitFor({ state: 'visible', timeout: 10_000 });
+    await expect(page).toHaveURL(deepLink);
+
+    // Breadcrumb should include the loop node name.
+    await expect(page.locator('.breadcrumb')).toContainText('process-items');
+  });
 });

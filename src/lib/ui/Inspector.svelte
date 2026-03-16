@@ -16,7 +16,20 @@
 
 <script lang="ts">
   import { t } from '$lib/i18n/index.svelte';
-  import type { Node } from '$lib/tasks/model';
+  import {
+    addSwitchBranch,
+    removeSwitchBranch,
+    renameForkBranch,
+    renameSwitchBranch,
+    updateSwitchBranchCondition,
+    updateSwitchBranchTarget,
+  } from '$lib/tasks/actions';
+  import type {
+    ForkNode,
+    NamedWorkflow,
+    Node,
+    SwitchNode,
+  } from '$lib/tasks/model';
 
   import CommonFields from './inspector/CommonFields.svelte';
   import { getNodeEditor } from './node-editors/registry';
@@ -37,11 +50,12 @@
     // Navigation into subgraphs
     onenternode?: (nodeId: string) => void; // loop body
     onenterbranch?: (nodeId: string, branchId: string) => void; // switch/fork/try
-    // Branch management (switch / fork)
+    // Branch management (fork only — switch uses onupdate directly)
     onaddbranch?: (nodeId: string) => void;
     onremovebranch?: (nodeId: string, branchId: string) => void;
-    // Try-specific: add catchGraph section
-    onaddcatch?: (nodeId: string) => void;
+    // Workflow list for switch branch target selection
+    workflows?: NamedWorkflow[];
+    currentWorkflowName?: string;
   }
 
   let {
@@ -56,7 +70,8 @@
     onenterbranch,
     onaddbranch,
     onremovebranch,
-    onaddcatch,
+    workflows = [],
+    currentWorkflowName = '',
   }: Props = $props();
 
   // ---------------------------------------------------------------------------
@@ -65,18 +80,68 @@
 
   const NodeEditor = $derived(node ? getNodeEditor(node) : null);
 
+  // Narrowed switch node — used by the switch branch editing section.
+  const switchNode = $derived(
+    node !== null && node.type === 'switch' ? (node as SwitchNode) : null,
+  );
+
+  // Narrowed fork node — used by the fork branch editing section.
+  const forkNode = $derived(
+    node !== null && node.type === 'fork' ? (node as ForkNode) : null,
+  );
+
+  // Available target workflows: all except the current one.
+  const targetWorkflows = $derived(
+    workflows.filter((wf) => wf.name !== currentWorkflowName),
+  );
+
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 
-  // Minimum branch count: fork requires at least 2; switch requires at least 1.
-  function minBranches(n: Node): number {
-    return n.type === 'fork' ? 2 : 1;
+  // ---------------------------------------------------------------------------
+  // Fork branch rename state — follows Sidebar.svelte's inline-edit pattern.
+  // ---------------------------------------------------------------------------
+
+  let editingBranchId = $state<string | null>(null);
+  let editingBranchLabel = $state('');
+
+  function focusBranchInput(el: HTMLElement): void {
+    el.focus();
+    if (el instanceof HTMLInputElement) el.select();
+  }
+
+  function handleForkRenameClick(branchId: string, currentLabel: string): void {
+    editingBranchId = branchId;
+    editingBranchLabel = currentLabel;
+  }
+
+  function handleForkRenameCommit(): void {
+    const branchId = editingBranchId;
+    editingBranchId = null;
+    if (!branchId || !forkNode) return;
+    const trimmed = editingBranchLabel.trim();
+    const existing = forkNode.branches.find((b) => b.id === branchId);
+    if (!trimmed || trimmed === existing?.label) return;
+    onupdate?.(renameForkBranch(forkNode, branchId, trimmed));
+  }
+
+  function handleForkRenameKeydown(e: KeyboardEvent): void {
+    if (e.key === 'Enter') handleForkRenameCommit();
+    if (e.key === 'Escape') editingBranchId = null;
   }
 
   function handleNameChange(value: string): void {
     if (!node) return;
     onupdate?.({ ...node, name: value });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Switch branch helpers — call onupdate with the full updated SwitchNode.
+  // ---------------------------------------------------------------------------
+
+  function handleSwitchUpdate(updated: SwitchNode): void {
+    onupdate?.(updated);
   }
 </script>
 
@@ -114,45 +179,253 @@
     </section>
 
     <!-- -------------------------------------------------------------------
-      TaskSpecificSection: dynamically loaded editor from registry.
-      For task nodes this replaces the "coming soon" hint.
-      For structural nodes this supplements the branch/section navigation.
+      Switch branch editing — full per-branch form with name, condition,
+      target workflow, and inline validation.
     -------------------------------------------------------------------- -->
 
-    {#if node.type === 'switch' || node.type === 'fork'}
+    {#if switchNode}
+      {@const hasDefault = switchNode.branches.some(
+        (b) => b.condition === undefined,
+      )}
       <section class="inspector-branches">
-        <h3 class="inspector-section-title">{t('inspector.branches')}</h3>
-        <ul class="branch-list" role="list">
-          {#each node.branches as branch (branch.id)}
-            <li class="branch-item">
-              <button
-                class="branch-label-btn"
-                onclick={() => onenterbranch?.(node.id, branch.id)}
-                type="button"
-              >
-                {branch.label}
-              </button>
-              {#if node.branches.length > minBranches(node)}
+        <h3 class="inspector-section-title">
+          {t('inspector.switch.branches')}
+        </h3>
+
+        {#each switchNode.branches as branch (branch.id)}
+          {@const isDefault = branch.condition === undefined}
+          {@const isDuplicate =
+            switchNode.branches.filter((b) => b.label === branch.label).length >
+            1}
+          {@const emptyCondition = !isDefault && branch.condition === ''}
+          {@const noTarget = !branch.thenWorkflowName}
+
+          <div class="switch-branch-card" data-testid="switch-branch-card">
+            <div class="switch-branch-card-header">
+              {#if isDefault}
+                <span class="switch-default-badge"
+                  >{t('inspector.switch.defaultBranch')}</span
+                >
+              {:else}
+                <span></span>
+              {/if}
+              {#if switchNode.branches.length > 1}
                 <button
                   class="branch-remove-btn"
-                  onclick={() => onremovebranch?.(node.id, branch.id)}
                   type="button"
                   aria-label={t('inspector.removeBranch', {
                     label: branch.label,
                   })}
+                  onclick={() =>
+                    handleSwitchUpdate(
+                      removeSwitchBranch(switchNode, branch.id),
+                    )}
                 >
                   ✕
                 </button>
+              {/if}
+            </div>
+
+            <label class="field-label" for="branch-name-{branch.id}">
+              {t('inspector.switch.branchName')}
+            </label>
+            <input
+              id="branch-name-{branch.id}"
+              class="text-input"
+              type="text"
+              aria-label={t('inspector.switch.branchName')}
+              value={branch.label}
+              oninput={(e) =>
+                handleSwitchUpdate(
+                  renameSwitchBranch(
+                    switchNode,
+                    branch.id,
+                    e.currentTarget.value,
+                  ),
+                )}
+            />
+            {#if isDuplicate}
+              <p class="field-warning">
+                {t('inspector.switch.errorDuplicateName')}
+              </p>
+            {/if}
+
+            {#if !isDefault}
+              <label class="field-label" for="branch-cond-{branch.id}">
+                {t('inspector.switch.condition')}
+              </label>
+              <input
+                id="branch-cond-{branch.id}"
+                class="text-input text-input--mono"
+                type="text"
+                aria-label={t('inspector.switch.condition')}
+                value={branch.condition ?? ''}
+                oninput={(e) =>
+                  handleSwitchUpdate(
+                    updateSwitchBranchCondition(
+                      switchNode,
+                      branch.id,
+                      e.currentTarget.value,
+                    ),
+                  )}
+              />
+              {#if emptyCondition}
+                <p class="field-warning">
+                  {t('inspector.switch.errorEmptyCondition')}
+                </p>
+              {/if}
+            {/if}
+
+            <label class="field-label" for="branch-target-{branch.id}">
+              {t('inspector.switch.targetWorkflow')}
+            </label>
+            <select
+              id="branch-target-{branch.id}"
+              class="select-input"
+              aria-label={t('inspector.switch.targetWorkflow')}
+              value={branch.thenWorkflowName ?? ''}
+              onchange={(e) =>
+                handleSwitchUpdate(
+                  updateSwitchBranchTarget(
+                    switchNode,
+                    branch.id,
+                    e.currentTarget.value || undefined,
+                  ),
+                )}
+            >
+              <option value="">—</option>
+              {#each targetWorkflows as wf (wf.id)}
+                <option value={wf.name}>{wf.name}</option>
+              {/each}
+            </select>
+            {#if noTarget}
+              <p class="field-warning">
+                {t('inspector.switch.errorNoTarget')}
+              </p>
+            {/if}
+          </div>
+        {/each}
+
+        <div class="switch-add-btns">
+          <button
+            class="branch-add-btn"
+            type="button"
+            onclick={() =>
+              handleSwitchUpdate(addSwitchBranch(switchNode, 'new-branch', ''))}
+          >
+            {t('inspector.switch.addBranch')}
+          </button>
+          {#if !hasDefault}
+            <button
+              class="branch-add-btn"
+              type="button"
+              onclick={() =>
+                handleSwitchUpdate(
+                  addSwitchBranch(switchNode, 'default', undefined),
+                )}
+            >
+              {t('inspector.switch.addDefaultBranch')}
+            </button>
+          {/if}
+        </div>
+      </section>
+    {:else if forkNode}
+      <section class="inspector-branches">
+        <h3 class="inspector-section-title">{t('inspector.fork.branches')}</h3>
+        <ul class="branch-list" role="list">
+          {#each forkNode.branches as branch (branch.id)}
+            {@const isDuplicate =
+              forkNode.branches.filter((b) => b.label === branch.label).length >
+              1}
+            <li class="branch-item" class:branch-item--warn={isDuplicate}>
+              {#if editingBranchId === branch.id}
+                <input
+                  class="branch-rename-input"
+                  type="text"
+                  bind:value={editingBranchLabel}
+                  onblur={handleForkRenameCommit}
+                  onkeydown={handleForkRenameKeydown}
+                  aria-label={t('inspector.fork.renameBranch', {
+                    label: branch.label,
+                  })}
+                  use:focusBranchInput
+                />
+              {:else}
+                <button
+                  class="branch-label-btn"
+                  onclick={() => onenterbranch?.(forkNode.id, branch.id)}
+                  type="button"
+                >
+                  {branch.label}
+                </button>
+                <button
+                  class="branch-action-btn"
+                  onclick={() => handleForkRenameClick(branch.id, branch.label)}
+                  type="button"
+                  aria-label={t('inspector.fork.renameBranch', {
+                    label: branch.label,
+                  })}
+                >
+                  <svg
+                    aria-hidden="true"
+                    fill="none"
+                    height="11"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.75"
+                    viewBox="0 0 16 16"
+                    width="11"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M11 2l3 3-8 8H3v-3z" />
+                    <path d="M9.5 3.5l3 3" />
+                  </svg>
+                </button>
+                {#if forkNode.branches.length > 1}
+                  <button
+                    class="branch-action-btn branch-action-btn--delete"
+                    onclick={() => onremovebranch?.(forkNode.id, branch.id)}
+                    type="button"
+                    aria-label={t('inspector.fork.deleteBranch', {
+                      label: branch.label,
+                    })}
+                  >
+                    <svg
+                      aria-hidden="true"
+                      fill="none"
+                      height="11"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.75"
+                      viewBox="0 0 16 16"
+                      width="11"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <polyline points="2 4 14 4" />
+                      <path d="M5 4V2h6v2" />
+                      <path d="M3 4l1 10h8l1-10" />
+                      <line x1="6.5" x2="6.5" y1="7" y2="11" />
+                      <line x1="9.5" x2="9.5" y1="7" y2="11" />
+                    </svg>
+                  </button>
+                {/if}
+                {#if isDuplicate}
+                  <span class="branch-warning"
+                    >{t('inspector.fork.errorDuplicateName')}</span
+                  >
+                {/if}
               {/if}
             </li>
           {/each}
         </ul>
         <button
           class="branch-add-btn"
-          onclick={() => onaddbranch?.(node.id)}
+          onclick={() => onaddbranch?.(forkNode.id)}
           type="button"
         >
-          {t('inspector.addBranch')}
+          {t('inspector.fork.addBranch')}
         </button>
       </section>
     {:else if node.type === 'try'}
@@ -166,23 +439,13 @@
           >
             {t('inspector.enterTryBody')}
           </button>
-          {#if node.catchGraph !== undefined}
-            <button
-              class="try-section-btn"
-              onclick={() => onenterbranch?.(node.id, 'catchGraph')}
-              type="button"
-            >
-              {t('inspector.enterCatchBlock')}
-            </button>
-          {:else}
-            <button
-              class="try-add-catch-btn"
-              onclick={() => onaddcatch?.(node.id)}
-              type="button"
-            >
-              {t('inspector.addCatchBlock')}
-            </button>
-          {/if}
+          <button
+            class="try-section-btn"
+            onclick={() => onenterbranch?.(node.id, 'catchGraph')}
+            type="button"
+          >
+            {t('inspector.enterCatchBlock')}
+          </button>
         </div>
       </section>
     {:else if node.type === 'loop'}
@@ -192,7 +455,7 @@
           onclick={() => onenternode?.(node.id)}
           type="button"
         >
-          {t('inspector.enterLoopBody')}
+          {t('inspector.loop.enterBody')}
         </button>
       </section>
     {/if}
@@ -343,6 +606,97 @@
     letter-spacing: 0.04em;
   }
 
+  /* -------------------------------------------------------------------------
+     Switch branch cards
+  ------------------------------------------------------------------------- */
+
+  .switch-branch-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.5rem 0.6rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .switch-branch-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.2rem;
+  }
+
+  .switch-default-badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #7c3aed;
+    background: #f3f0ff;
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+
+  .text-input {
+    width: 100%;
+    padding: 0.25rem 0.4rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    color: #111;
+    background: #fff;
+    box-sizing: border-box;
+    margin-bottom: 0.2rem;
+  }
+
+  .text-input--mono {
+    font-family: monospace;
+  }
+
+  .text-input:focus {
+    outline: none;
+    border-color: #1a56cc;
+    box-shadow: 0 0 0 2px rgba(26, 86, 204, 0.15);
+  }
+
+  .select-input {
+    width: 100%;
+    padding: 0.25rem 0.4rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-family: inherit;
+    color: #111;
+    background: #fff;
+    box-sizing: border-box;
+    margin-bottom: 0.2rem;
+  }
+
+  .select-input:focus {
+    outline: none;
+    border-color: #1a56cc;
+    box-shadow: 0 0 0 2px rgba(26, 86, 204, 0.15);
+  }
+
+  .field-warning {
+    margin: 0 0 0.2rem;
+    font-size: 0.7rem;
+    color: #b45309;
+  }
+
+  .switch-add-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-top: 0.25rem;
+  }
+
+  /* -------------------------------------------------------------------------
+     Fork branch list (unchanged)
+  ------------------------------------------------------------------------- */
+
   .branch-list {
     list-style: none;
     margin: 0 0 0.5rem;
@@ -378,6 +732,56 @@
   .branch-label-btn:hover {
     background: #e0eaff;
     border-color: #1a56cc;
+  }
+
+  .branch-item--warn {
+    flex-wrap: wrap;
+  }
+
+  .branch-warning {
+    width: 100%;
+    font-size: 0.72rem;
+    color: #b45309;
+  }
+
+  .branch-rename-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #1a56cc;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+  }
+
+  .branch-action-btn {
+    flex-shrink: 0;
+    padding: 0.2rem 0.375rem;
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #555;
+    cursor: pointer;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .branch-action-btn:hover {
+    background: #f0f0f0;
+    border-color: #999;
+  }
+
+  .branch-action-btn--delete {
+    border-color: #e0a0a0;
+    color: #c0392b;
+  }
+
+  .branch-action-btn--delete:hover {
+    background: #fff0f0;
+    border-color: #c0392b;
   }
 
   .branch-remove-btn {
@@ -436,24 +840,6 @@
   .try-section-btn:hover {
     background: #eee;
     border-color: #aaa;
-  }
-
-  .try-add-catch-btn {
-    width: 100%;
-    padding: 0.3rem 0.5rem;
-    background: transparent;
-    border: 1px dashed #aaa;
-    border-radius: 4px;
-    color: #555;
-    font-size: 0.78rem;
-    cursor: pointer;
-    text-align: center;
-  }
-
-  .try-add-catch-btn:hover {
-    border-color: #dc2626;
-    color: #dc2626;
-    background: #fff5f5;
   }
 
   /* Loop body */

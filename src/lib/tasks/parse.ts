@@ -777,14 +777,22 @@ function parseTryNode(
   const tryHoisted = collectHoistedNames(tryEntries);
   const tryGraph = parseGraph(tryEntries, entryMap, tryHoisted, ctx);
 
-  const node: TryNode = { id, type: 'try', name, tryGraph, metadata };
+  const catchDef = ('catch' in def ? (def['catch'] ?? {}) : {}) as Record<
+    string,
+    unknown
+  >;
+  const catchEntries = (catchDef['do'] as RawEntry[]) ?? [];
+  const catchHoisted = collectHoistedNames(catchEntries);
+  const catchGraph = parseGraph(catchEntries, entryMap, catchHoisted, ctx);
 
-  if ('catch' in def) {
-    const catchDef = (def['catch'] ?? {}) as Record<string, unknown>;
-    const catchEntries = (catchDef['do'] as RawEntry[]) ?? [];
-    const catchHoisted = collectHoistedNames(catchEntries);
-    node.catchGraph = parseGraph(catchEntries, entryMap, catchHoisted, ctx);
-  }
+  const node: TryNode = {
+    id,
+    type: 'try',
+    name,
+    tryGraph,
+    catchGraph,
+    metadata,
+  };
 
   if (typeof def['if'] === 'string') node.if = def['if'];
   return node;

@@ -140,7 +140,7 @@ export type TryNode = {
   type: 'try';
   name: string;
   tryGraph: FlowGraph;
-  catchGraph?: FlowGraph;
+  catchGraph: FlowGraph;
   if?: string;
   metadata?: Record<string, unknown>;
 };
