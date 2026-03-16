@@ -59,6 +59,10 @@
     "moveDown": "↓ Move down",
     "moveDownLabel": "Move task down",
     "delete": "Delete task",
+    "deleteConfirmTitle": "Delete task",
+    "deleteConfirmMessage": "Are you sure you want to delete this task? This cannot be undone.",
+    "deleteCancel": "Cancel",
+    "deleteConfirm": "Delete",
     "set": {
       "title": "Assignments",
       "addRow": "+ Add assignment",

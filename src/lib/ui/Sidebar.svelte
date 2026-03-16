@@ -140,6 +140,12 @@
   }
 </script>
 
+<svelte:window
+  onkeydown={(e) => {
+    if (e.key === 'Escape' && confirmDeleteId) handleCancelDelete();
+  }}
+/>
+
 <nav class="sidebar">
   <!-- Document metadata -->
   <header class="sidebar-header">

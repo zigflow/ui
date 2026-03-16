@@ -930,6 +930,12 @@
   }
 </script>
 
+<svelte:window
+  onkeydown={(e) => {
+    if (e.key === 'Escape' && showExport) showExport = false;
+  }}
+/>
+
 <div class="editor-root">
   <!-- Sidebar: document + workflow list -->
   <Sidebar

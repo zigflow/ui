@@ -143,7 +143,19 @@
   function handleSwitchUpdate(updated: SwitchNode): void {
     onupdate?.(updated);
   }
+
+  // ---------------------------------------------------------------------------
+  // Delete task confirmation
+  // ---------------------------------------------------------------------------
+
+  let confirmingDelete = $state(false);
 </script>
+
+<svelte:window
+  onkeydown={(e) => {
+    if (e.key === 'Escape' && confirmingDelete) confirmingDelete = false;
+  }}
+/>
 
 <aside class="inspector">
   {#if node === null}
@@ -489,11 +501,50 @@
       </button>
     </div>
 
-    <button class="delete-btn" onclick={() => ondelete?.()} type="button">
+    <button
+      class="delete-btn"
+      onclick={() => (confirmingDelete = true)}
+      type="button"
+    >
       {t('inspector.delete')}
     </button>
   {/if}
 </aside>
+
+{#if confirmingDelete}
+  <div
+    class="delete-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-label={t('inspector.deleteConfirmTitle')}
+  >
+    <div class="delete-dialog">
+      <h3 class="delete-dialog-title">{t('inspector.deleteConfirmTitle')}</h3>
+      <p class="delete-dialog-message">
+        {t('inspector.deleteConfirmMessage')}
+      </p>
+      <div class="delete-dialog-actions">
+        <button
+          class="delete-dialog-cancel"
+          onclick={() => (confirmingDelete = false)}
+          type="button"
+        >
+          {t('inspector.deleteCancel')}
+        </button>
+        <button
+          class="delete-dialog-confirm"
+          onclick={() => {
+            confirmingDelete = false;
+            ondelete?.();
+          }}
+          type="button"
+        >
+          {t('inspector.deleteConfirm')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   .inspector {
@@ -913,5 +964,81 @@
   .delete-btn:hover {
     background: #fff0f0;
     border-color: #c0392b;
+  }
+
+  /* -------------------------------------------------------------------------
+     Delete confirmation modal
+  ------------------------------------------------------------------------- */
+
+  .delete-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .delete-dialog {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.18),
+      0 1px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    max-width: 360px;
+    width: 90%;
+  }
+
+  .delete-dialog-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    color: #1a1a1a;
+  }
+
+  .delete-dialog-message {
+    font-size: 0.875rem;
+    color: #555;
+    margin: 0 0 1.25rem 0;
+    line-height: 1.5;
+  }
+
+  .delete-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .delete-dialog-cancel {
+    padding: 0.375rem 0.875rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 0.875rem;
+    color: #444;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .delete-dialog-cancel:hover {
+    background: #f5f5f5;
+  }
+
+  .delete-dialog-confirm {
+    padding: 0.375rem 0.875rem;
+    border: 1px solid #c0392b;
+    border-radius: 6px;
+    background: #c0392b;
+    font-size: 0.875rem;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .delete-dialog-confirm:hover {
+    background: #a93226;
+    border-color: #a93226;
   }
 </style>
