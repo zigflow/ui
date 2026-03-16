@@ -211,11 +211,17 @@ function validateSwitchNode(
 function validateForkNode(node: ForkNode, path: string[]): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  if (node.branches.length < 2) {
+  if (node.branches.length < 1) {
     errors.push({
       path,
-      message: 'Fork node must have at least two branches',
+      message: 'Fork node must have at least one branch',
     });
+  }
+
+  const labelCounts = new Map<string, number>();
+  for (const b of node.branches) {
+    const l = b.label.trim();
+    labelCounts.set(l, (labelCounts.get(l) ?? 0) + 1);
   }
 
   for (const branch of node.branches) {
@@ -223,6 +229,11 @@ function validateForkNode(node: ForkNode, path: string[]): ValidationError[] {
       errors.push({
         path: [...path, 'branches', branch.id],
         message: 'Branch label is required',
+      });
+    } else if ((labelCounts.get(branch.label.trim()) ?? 0) > 1) {
+      errors.push({
+        path: [...path, 'branches', branch.id],
+        message: 'Branch label must be unique',
       });
     }
     errors.push(
@@ -241,9 +252,7 @@ function validateForkNode(node: ForkNode, path: string[]): ValidationError[] {
 function validateTryNode(node: TryNode, path: string[]): ValidationError[] {
   const errors: ValidationError[] = [];
   errors.push(...validateFlowGraph(node.tryGraph, [...path, 'tryGraph']));
-  if (node.catchGraph) {
-    errors.push(...validateFlowGraph(node.catchGraph, [...path, 'catchGraph']));
-  }
+  errors.push(...validateFlowGraph(node.catchGraph, [...path, 'catchGraph']));
   return errors;
 }
 

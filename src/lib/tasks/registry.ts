@@ -20,6 +20,7 @@
 // Factories use crypto.randomUUID() directly to avoid importing from actions.ts.
 import type {
   FlowGraph,
+  ForkBranch,
   ForkNode,
   LoopNode,
   Node,
@@ -217,12 +218,19 @@ export const TASK_REGISTRY: readonly TaskDefinition[] = [
     description: 'Run branches in parallel',
     create: (): ForkNode => {
       const nid = id();
+      const bid = id();
+      const defaultBranch: ForkBranch = {
+        id: bid,
+        label: 'branch-1',
+        graph: emptyGraph(),
+        metadata: { [ZIGFLOW_ID_KEY]: bid },
+      };
       return {
         id: nid,
         type: 'fork',
         name: 'fork',
         compete: false,
-        branches: [],
+        branches: [defaultBranch],
         metadata: { [ZIGFLOW_ID_KEY]: nid },
       };
     },
@@ -239,6 +247,7 @@ export const TASK_REGISTRY: readonly TaskDefinition[] = [
         type: 'try',
         name: 'try-catch',
         tryGraph: emptyGraph(),
+        catchGraph: emptyGraph(),
         metadata: { [ZIGFLOW_ID_KEY]: nid },
       };
     },
@@ -254,7 +263,9 @@ export const TASK_REGISTRY: readonly TaskDefinition[] = [
         id: nid,
         type: 'loop',
         name: 'loop',
-        in: '$.',
+        in: '${ $input.items }',
+        each: 'item',
+        at: 'index',
         bodyGraph: emptyGraph(),
         metadata: { [ZIGFLOW_ID_KEY]: nid },
       };

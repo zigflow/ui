@@ -37,11 +37,22 @@
     "branches": "Branches",
     "removeBranch": "Remove branch {{label}}",
     "addBranch": "+ Add branch",
+    "switch": {
+      "branches": "Branches",
+      "branchName": "Branch name",
+      "condition": "Condition (when)",
+      "targetWorkflow": "Target workflow",
+      "addBranch": "+ Add branch",
+      "addDefaultBranch": "+ Add default branch",
+      "defaultBranch": "Default branch",
+      "errorDuplicateName": "Duplicate branch name",
+      "errorEmptyCondition": "Condition is required",
+      "errorNoTarget": "Target workflow is required"
+    },
     "sections": "Sections",
     "enterTryBody": "Enter try body",
     "enterCatchBlock": "Enter catch block",
     "addCatchBlock": "+ Add catch block",
-    "enterLoopBody": "Enter loop body",
     "comingSoon": "Full editing UI coming soon.",
     "moveUp": "↑ Move up",
     "moveUpLabel": "Move task up",
@@ -72,15 +83,21 @@
       "days": "Days"
     },
     "fork": {
+      "branches": "Branches",
+      "addBranch": "+ Add branch",
+      "renameBranch": "Rename branch {{label}}",
+      "deleteBranch": "Delete branch {{label}}",
+      "errorDuplicateName": "Duplicate branch name",
       "compete": "Compete mode",
       "competeHint": "First branch to finish wins"
     },
     "loop": {
-      "title": "Loop configuration",
-      "in": "Collection",
-      "each": "Item variable",
-      "at": "Index variable",
-      "while": "Break condition"
+      "configuration": "Loop configuration",
+      "collection": "Collection",
+      "itemVariable": "Item variable",
+      "indexVariable": "Index variable",
+      "breakCondition": "Break condition",
+      "enterBody": "Enter loop body"
     },
     "callGrpc": {
       "title": "Call gRPC",
@@ -349,7 +366,7 @@
     "switch": "Switch",
     "fork": "Fork",
     "try": "Try / Catch",
-    "loop": "Loop"
+    "loop": "For Loop"
   },
   "sidebar": {
     "document": "Document",
@@ -372,7 +389,20 @@
   "canvas": {
     "ariaLabel": "Workflow canvas",
     "tryBody": "try body",
-    "catchBlock": "catch block",
-    "loopBody": "body"
+    "catchBlock": "catch block"
+  },
+  "node": {
+    "loop": {
+      "for": "for",
+      "body": "body",
+      "bodyEmpty": "body (empty)",
+      "bodyCount": "body ({{count}} tasks)"
+    }
+  },
+  "validation": {
+    "loop": {
+      "collectionRequired": "Collection is required",
+      "invalidIdentifier": "Must be a valid identifier (letters, digits, underscores; cannot start with a digit)"
+    }
   }
 }

@@ -30,6 +30,7 @@
 -->
 
 <script lang="ts">
+  import { t } from '$lib/i18n/index.svelte';
   import { Handle, Position } from '@xyflow/svelte';
   import { getContext } from 'svelte';
 
@@ -53,6 +54,8 @@
     nodeType: string; // 'task' | 'switch' | 'fork' | 'try' | 'loop'
     typeLabel: string;
     navRows?: NavRow[];
+    // Loop nodes only: the 'in' collection expression shown under the header.
+    loopExpression?: string;
   };
 
   interface Props {
@@ -109,6 +112,15 @@
       <span class="flow-node-type">{data.typeLabel}</span>
       <span class="flow-node-name">{data.label}</span>
     </div>
+
+    {#if data.loopExpression !== undefined}
+      <div class="flow-node-loop-expr">
+        <span class="flow-node-loop-for" aria-hidden="true"
+          >{t('node.loop.for')}</span
+        >
+        <span class="flow-node-loop-expr-val">{data.loopExpression}</span>
+      </div>
+    {/if}
 
     {#if data.navRows && data.navRows.length > 0}
       <ul class="flow-node-rows" role="list">
@@ -266,5 +278,39 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  /* -------------------------------------------------------------------------
+     Loop expression line
+  ------------------------------------------------------------------------- */
+
+  .flow-node-loop-expr {
+    height: 22px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0 0.5rem;
+    border-bottom: 1px solid #eee;
+    overflow: hidden;
+  }
+
+  .flow-node-loop-for {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .flow-node-loop-expr-val {
+    font-size: 0.68rem;
+    font-family: monospace;
+    color: #444;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
   }
 </style>

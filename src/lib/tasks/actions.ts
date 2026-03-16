@@ -114,7 +114,7 @@ export function referencedWorkflowNames(file: WorkflowFile): Set<string> {
         }
       } else if (node.type === 'try') {
         walkGraph(node.tryGraph);
-        if (node.catchGraph) walkGraph(node.catchGraph);
+        walkGraph(node.catchGraph);
       } else if (node.type === 'loop') {
         walkGraph(node.bodyGraph);
       }
@@ -176,9 +176,7 @@ export function renameWorkflowReferences(
     }
     if (node.type === 'try') {
       const newTryGraph = updateGraph(node.tryGraph);
-      const newCatchGraph = node.catchGraph
-        ? updateGraph(node.catchGraph)
-        : undefined;
+      const newCatchGraph = updateGraph(node.catchGraph);
       if (newTryGraph === node.tryGraph && newCatchGraph === node.catchGraph)
         return node;
       return { ...node, tryGraph: newTryGraph, catchGraph: newCatchGraph };
@@ -461,6 +459,32 @@ export function renameSwitchBranch(
   };
 }
 
+export function updateSwitchBranchCondition(
+  node: SwitchNode,
+  branchId: string,
+  condition: string | undefined,
+): SwitchNode {
+  return {
+    ...node,
+    branches: node.branches.map((b) =>
+      b.id === branchId ? { ...b, condition } : b,
+    ),
+  };
+}
+
+export function updateSwitchBranchTarget(
+  node: SwitchNode,
+  branchId: string,
+  thenWorkflowName: string | undefined,
+): SwitchNode {
+  return {
+    ...node,
+    branches: node.branches.map((b) =>
+      b.id === branchId ? { ...b, thenWorkflowName } : b,
+    ),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // ForkNode
 // ---------------------------------------------------------------------------
@@ -477,11 +501,22 @@ export function createForkNode(name: string): ForkNode {
   };
 }
 
-export function addForkBranch(node: ForkNode, label: string): ForkNode {
+/**
+ * Returns the next available branch label of the form `branch-N`, starting
+ * from 1 and incrementing until a name not already in use is found.
+ */
+export function nextForkBranchLabel(branches: ForkBranch[]): string {
+  const existing = new Set(branches.map((b) => b.label));
+  let n = 1;
+  while (existing.has(`branch-${n}`)) n++;
+  return `branch-${n}`;
+}
+
+export function addForkBranch(node: ForkNode): ForkNode {
   const zid = newId();
   const branch: ForkBranch = {
     id: zid,
-    label,
+    label: nextForkBranchLabel(node.branches),
     graph: emptyFlowGraph(),
     metadata: { [ZIGFLOW_ID_KEY]: zid },
   };
@@ -532,6 +567,7 @@ export function createTryNode(name: string): TryNode {
     type: 'try',
     name,
     tryGraph: emptyFlowGraph(),
+    catchGraph: emptyFlowGraph(),
     metadata: { [ZIGFLOW_ID_KEY]: zid },
   };
 }
@@ -593,7 +629,7 @@ export function insertNode(
 // Resolve the FlowGraph at the given GraphPath. Throws on invalid paths.
 //
 // Segment consumption rules per node type:
-//   loop   → 1 segment  (nodeId → bodyGraph)
+//   loop   → 2 segments (nodeId + 'body' → bodyGraph)
 //   switch → 2 segments (nodeId + branchId → branch.graph)
 //   fork   → 2 segments (nodeId + branchId → branch.graph)
 //   try    → 2 segments (nodeId + 'tryGraph'|'catchGraph' → section)
@@ -615,13 +651,7 @@ export function getGraphAtPath(file: WorkflowFile, path: GraphPath): FlowGraph {
       throw new Error(`Node ${nodeId} is a task and has no sub-graph`);
     }
 
-    if (node.type === 'loop') {
-      graph = node.bodyGraph;
-      i += 1;
-      continue;
-    }
-
-    // switch, fork, try — consume one additional segment for the sub-graph id
+    // switch, fork, try, loop — consume one additional segment for the sub-graph id
     i += 1;
     if (i >= path.segments.length) {
       throw new Error(
@@ -629,6 +659,17 @@ export function getGraphAtPath(file: WorkflowFile, path: GraphPath): FlowGraph {
       );
     }
     const subId = path.segments[i]!;
+
+    if (node.type === 'loop') {
+      if (subId !== 'body') {
+        throw new Error(
+          `Expected "body" after loop node ${nodeId}, got "${subId}"`,
+        );
+      }
+      graph = node.bodyGraph;
+      i += 1;
+      continue;
+    }
 
     if (node.type === 'switch') {
       const branch = node.branches.find((b) => b.id === subId);
@@ -644,7 +685,7 @@ export function getGraphAtPath(file: WorkflowFile, path: GraphPath): FlowGraph {
       graph = branch.graph;
     } else if (node.type === 'try') {
       if (subId === 'catchGraph') {
-        graph = node.catchGraph ?? node.tryGraph;
+        graph = node.catchGraph;
       } else if (subId === 'tryGraph') {
         graph = node.tryGraph;
       } else {
@@ -693,17 +734,7 @@ function applyTransformAt(
   const node = graph.nodes[nodeId];
   if (!node) throw new Error(`Node ${nodeId} not found at segment ${i}`);
 
-  if (node.type === 'loop') {
-    const newBody = applyTransformAt(
-      node.bodyGraph,
-      segments,
-      i + 1,
-      transform,
-    );
-    return replaceNode(graph, { ...node, bodyGraph: newBody });
-  }
-
-  // switch, fork, try — next segment identifies which sub-graph to descend into
+  // switch, fork, try, loop — next segment identifies which sub-graph to descend into
   const subIndex = i + 1;
   if (subIndex >= segments.length) {
     throw new Error(
@@ -739,7 +770,7 @@ function applyTransformAt(
   if (node.type === 'try') {
     if (subId === 'catchGraph') {
       const newCatch = applyTransformAt(
-        node.catchGraph ?? emptyFlowGraph(),
+        node.catchGraph,
         segments,
         subIndex + 1,
         transform,
@@ -754,6 +785,17 @@ function applyTransformAt(
       );
       return replaceNode(graph, { ...node, tryGraph: newTry });
     }
+  }
+
+  if (node.type === 'loop') {
+    // subId is the 'body' literal — descend into bodyGraph.
+    const newBody = applyTransformAt(
+      node.bodyGraph,
+      segments,
+      subIndex + 1,
+      transform,
+    );
+    return replaceNode(graph, { ...node, bodyGraph: newBody });
   }
 
   throw new Error(

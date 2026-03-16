@@ -46,12 +46,21 @@ do:
               __zigflow_id: a28d11d1-6e35-453f-b2af-64811c0ff650
         - safe-call:
             try: []
+            catch:
+              do: []
             metadata:
               __zigflow_id: 7e649e6b-50f6-4e93-a501-7f8ffaf4d6aa
         - process-items:
             for:
               in: ${ $input.items }
-            do: []
+              each: item
+              at: index
+            do:
+              - wait:
+                  wait:
+                    seconds: 30
+                  metadata:
+                    __zigflow_id: 088b542c-8d4c-43b5-8557-97d541e86343
             metadata:
               __zigflow_id: e4879bd8-ed9e-4955-bff1-33490e86e5f7
         - wait:

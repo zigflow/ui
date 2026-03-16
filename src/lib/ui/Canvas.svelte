@@ -98,7 +98,10 @@
         ROW_HEADER + rows * ROW_HEIGHT + ROW_PADDING,
       );
     }
-    // loop: header(28) + body row(22) + padding(8) = 58 ≈ 60
+    // loop: header(28) + expression line(22) + body row(22) + padding(8) = 80
+    if (node.type === 'loop') {
+      return ROW_HEADER + ROW_HEIGHT + ROW_HEIGHT + ROW_PADDING;
+    }
     return NODE_HEIGHT_TASK;
   }
 
@@ -133,6 +136,8 @@
     nodeType: string;
     typeLabel: string;
     navRows?: NavRow[];
+    // Loop nodes only: the collection expression shown under the header.
+    loopExpression?: string;
   };
 
   type SFNode = {
@@ -177,7 +182,12 @@
       return rows;
     }
     if (node.type === 'loop') {
-      return [{ id: 'body', label: t('canvas.loopBody'), kind: 'enter' }];
+      const count = Object.keys(node.bodyGraph.nodes).length;
+      const label =
+        count === 0
+          ? t('node.loop.bodyEmpty')
+          : t('node.loop.bodyCount', { count });
+      return [{ id: 'body', label, kind: 'enter' }];
     }
     return [];
   }
@@ -188,6 +198,7 @@
       nodeType: node.type,
       typeLabel: nodeTypeLabel(node.type),
       navRows: node.type !== 'task' ? buildNavRows(node) : undefined,
+      loopExpression: node.type === 'loop' ? node.in : undefined,
     };
   }
 

@@ -22,7 +22,6 @@
     addForkBranch,
     addSwitchBranch,
     addWorkflow,
-    emptyFlowGraph,
     getGraphAtPath,
     insertNodeAtPath,
     moveNode,
@@ -34,12 +33,12 @@
     renameWorkflowReferences,
     replaceNode,
     updateGraphAtPath,
-    updateTrySection,
     updateWorkflowName,
   } from '$lib/tasks/actions';
   import type {
     FlowGraph,
     GraphPath,
+    NamedWorkflow,
     Node,
     NodeType,
     WorkflowFile,
@@ -188,16 +187,18 @@
 
       hashSegs.push(getNodeHashId(node));
 
+      // switch, fork, try, loop — next segment identifies the sub-graph
+      i += 1;
+      if (i >= path.segments.length) break;
+      const subId = path.segments[i]!;
+
       if (node.type === 'loop') {
+        // 'body' is the stable string constant for the loop body (like 'tryGraph').
+        hashSegs.push('body');
         graph = node.bodyGraph;
         i += 1;
         continue;
       }
-
-      // switch, fork, try — next segment identifies the sub-graph
-      i += 1;
-      if (i >= path.segments.length) break;
-      const subId = path.segments[i]!;
 
       if (node.type === 'switch') {
         const branch = node.branches.find((b) => b.id === subId);
@@ -212,10 +213,7 @@
       } else if (node.type === 'try') {
         // 'tryGraph' and 'catchGraph' are stable string constants, not IDs.
         hashSegs.push(subId);
-        graph =
-          subId === 'catchGraph'
-            ? (node.catchGraph ?? node.tryGraph)
-            : node.tryGraph;
+        graph = subId === 'catchGraph' ? node.catchGraph : node.tryGraph;
       }
 
       i += 1;
@@ -255,16 +253,18 @@
 
       segments.push(node.id);
 
+      // switch, fork, try, loop — next hash identifies the sub-graph
+      i += 1;
+      if (i >= hashSegs.length) break;
+      const subHashId = hashSegs[i]!;
+
       if (node.type === 'loop') {
+        if (subHashId !== 'body') return null;
+        segments.push('body');
         graph = node.bodyGraph;
         i += 1;
         continue;
       }
-
-      // switch, fork, try
-      i += 1;
-      if (i >= hashSegs.length) break;
-      const subHashId = hashSegs[i]!;
 
       if (node.type === 'switch') {
         const branch = node.branches.find(
@@ -283,10 +283,7 @@
       } else if (node.type === 'try') {
         if (subHashId !== 'tryGraph' && subHashId !== 'catchGraph') return null;
         segments.push(subHashId);
-        graph =
-          subHashId === 'catchGraph'
-            ? (node.catchGraph ?? node.tryGraph)
-            : node.tryGraph;
+        graph = subHashId === 'catchGraph' ? node.catchGraph : node.tryGraph;
       }
 
       i += 1;
@@ -357,6 +354,17 @@
 
   let selectedWorkflowId = $state<string>(_initialWorkflowId);
   let graphPath = $state<GraphPath>(_initialParsed.graphPath);
+
+  // Workflows list and current workflow name — passed to Inspector for switch
+  // branch target selection.
+  const inspectorWorkflows = $derived(
+    workflowFile.order
+      .map((id) => workflowFile.workflows[id])
+      .filter((wf): wf is NamedWorkflow => wf !== undefined),
+  );
+  const inspectorCurrentWorkflowName = $derived(
+    workflowFile.workflows[selectedWorkflowId]?.name ?? '',
+  );
   let selectedNodeId = $state<string | null>(_initialParsed.selectedNodeId);
   // Controls whether the Inspector panel is open. Initialised from the URL so
   // that a refresh or deep-link with ?selected=<id> reopens the Inspector for
@@ -425,15 +433,7 @@
       const node = graph.nodes[nodeId];
       if (!node) break;
 
-      if (node.type === 'loop') {
-        crumbs.push(`${node.name} › body`);
-        boundaries.push(i + 1);
-        graph = node.bodyGraph;
-        i += 1;
-        continue;
-      }
-
-      // switch, fork, try — consume two segments
+      // switch, fork, try, loop — consume two segments (nodeId + sub-graph id)
       const nextI = i + 1;
       if (nextI >= path.segments.length) break;
       const subId = path.segments[nextI];
@@ -455,10 +455,12 @@
         const label = subId === 'catchGraph' ? 'catch' : 'try';
         crumbs.push(`${node.name} › ${label}`);
         boundaries.push(nextI + 1);
-        graph =
-          subId === 'catchGraph'
-            ? (node.catchGraph ?? node.tryGraph)
-            : node.tryGraph;
+        graph = subId === 'catchGraph' ? node.catchGraph : node.tryGraph;
+        i = nextI + 1;
+      } else if (node.type === 'loop') {
+        crumbs.push(`${node.name} › body`);
+        boundaries.push(nextI + 1);
+        graph = node.bodyGraph;
         i = nextI + 1;
       } else {
         break;
@@ -519,10 +521,7 @@
       } else if (node.type === 'try') {
         const section = subId === 'catchGraph' ? 'catch' : 'try';
         label = `Editing Try Section: ${section} (${node.name})`;
-        graph =
-          subId === 'catchGraph'
-            ? (node.catchGraph ?? node.tryGraph)
-            : node.tryGraph;
+        graph = subId === 'catchGraph' ? node.catchGraph : node.tryGraph;
         i = nextI + 1;
       } else {
         break;
@@ -553,23 +552,10 @@
   // ---------------------------------------------------------------------------
 
   // Navigate into a LoopNode's bodyGraph (single sub-graph).
+  // Loop body navigation: 'body' is the stable sub-graph identifier,
+  // matching the 2-segment pattern used by switch/fork/try.
   function navigateInto(nodeId: string): void {
-    const newPath: GraphPath = {
-      ...graphPath,
-      segments: [...graphPath.segments, nodeId],
-    };
-    const hashSegs = graphPathToHashSegments(workflowFile, newPath);
-    if (hashSegs.length === 0) return;
-    graphPath = newPath;
-    selectedNodeId = null;
-    inspectorOpen = false;
-    history.pushState(
-      null,
-      '',
-      resolve(
-        `/workflows/${data.workflowId}?selected=${hashSegs.join('/')}` as WfPath,
-      ),
-    );
+    navigateIntoBranch(nodeId, 'body');
   }
 
   // Navigate into a branch or named section of a SwitchNode, ForkNode, or TryNode.
@@ -854,13 +840,15 @@
     const node = resolveNode(nodeId);
     if (!node) return;
     if (node.type === 'switch') {
+      const hasDefault = node.branches.some((b) => b.condition === undefined);
       updateCurrentGraph((g) =>
-        replaceNode(g, addSwitchBranch(node, 'new-branch')),
+        replaceNode(
+          g,
+          addSwitchBranch(node, 'new-branch', hasDefault ? '' : undefined),
+        ),
       );
     } else if (node.type === 'fork') {
-      updateCurrentGraph((g) =>
-        replaceNode(g, addForkBranch(node, 'new-branch')),
-      );
+      updateCurrentGraph((g) => replaceNode(g, addForkBranch(node)));
     }
   }
 
@@ -878,20 +866,8 @@
     }
   }
 
-  // Add a catchGraph to a TryNode and navigate into it immediately.
-  // Replace a node in the current graph with an updated version emitted by
-  // an Inspector editor. Uses replaceNode to minimise the diff.
   function handleNodeUpdate(updatedNode: Node): void {
     updateCurrentGraph((g) => replaceNode(g, updatedNode));
-  }
-
-  function handleAddCatch(nodeId: string) {
-    const node = resolveNode(nodeId);
-    if (!node || node.type !== 'try' || node.catchGraph !== undefined) return;
-    updateCurrentGraph((g) =>
-      replaceNode(g, updateTrySection(node, 'catchGraph', emptyFlowGraph())),
-    );
-    navigateIntoBranch(nodeId, 'catchGraph');
   }
 
   // Sync state when the browser navigates back/forward through pushState entries.
@@ -1020,7 +996,8 @@
         onenterbranch={handleEnterBranch}
         onaddbranch={handleAddBranch}
         onremovebranch={handleRemoveBranch}
-        onaddcatch={handleAddCatch}
+        workflows={inspectorWorkflows}
+        currentWorkflowName={inspectorCurrentWorkflowName}
       />
     </div>
   </div>
