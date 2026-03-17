@@ -327,59 +327,69 @@
 {/if}
 
 <style>
+  /* -------------------------------------------------------------------------
+     Sidebar shell
+  ------------------------------------------------------------------------- */
+
   .sidebar {
-    width: 220px;
-    min-width: 220px;
-    border-right: 1px solid #ddd;
-    background: #fafafa;
+    width: 230px;
+    min-width: 230px;
+    border-right: 1px solid var(--zf-border);
+    background: var(--zf-surface);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    font-family: var(--zf-font);
   }
 
   .sidebar-header {
     padding: 1rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--zf-border);
   }
 
   .sidebar-label {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #999;
-    margin: 0 0 0.25rem 0;
+    letter-spacing: 0.09em;
+    color: var(--zf-text-muted);
+    margin: 0 0 0.375rem 0;
   }
 
   .sidebar-doc-name {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
+    color: var(--zf-text-primary);
     margin: 0 0 0.125rem 0;
     word-break: break-all;
   }
 
   .sidebar-doc-meta {
-    font-size: 0.75rem;
-    color: #888;
+    font-size: 0.72rem;
+    color: var(--zf-text-muted);
     margin: 0;
   }
 
   .sidebar-section {
-    padding: 1rem;
+    padding: 0.875rem;
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.375rem;
   }
 
   .palette-section {
     flex: none;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--zf-border);
   }
 
   .palette-label-gap {
     margin-top: 0.5rem;
   }
+
+  /* -------------------------------------------------------------------------
+     Workflow list
+  ------------------------------------------------------------------------- */
 
   .workflow-list,
   .palette-list {
@@ -403,25 +413,27 @@
     text-align: left;
     padding: 0.375rem 0.625rem;
     border: 1px solid transparent;
-    border-radius: 6px;
+    border-radius: var(--zf-radius-sm);
     background: transparent;
-    font-size: 0.875rem;
+    font-size: 0.825rem;
     cursor: pointer;
-    color: #333;
+    color: var(--zf-text-secondary);
     transition: background 0.1s;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-family: inherit;
   }
 
   .workflow-item:hover {
-    background: #efefef;
+    background: var(--zf-surface-hover);
+    color: var(--zf-text-primary);
   }
 
   .workflow-item--selected {
-    background: #e8f0fe;
-    border-color: #c5d8ff;
-    color: #1a56cc;
+    background: var(--zf-accent-soft);
+    border-color: var(--zf-accent-border);
+    color: var(--zf-accent);
     font-weight: 500;
   }
 
@@ -429,14 +441,19 @@
     flex: 1;
     min-width: 0;
     padding: 0.25rem 0.5rem;
-    border: 1px solid #7eaaff;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    color: #333;
-    background: #fff;
+    border: 1px solid var(--zf-accent);
+    border-radius: var(--zf-radius-sm);
+    font-size: 0.825rem;
+    color: var(--zf-text-primary);
+    background: var(--zf-panel-bg);
     outline: none;
-    box-shadow: 0 0 0 2px #c5d8ff55;
+    box-shadow: 0 0 0 2px rgba(var(--zf-accent-rgb), 0.15);
+    font-family: inherit;
   }
+
+  /* -------------------------------------------------------------------------
+     Workflow action buttons (rename / delete)
+  ------------------------------------------------------------------------- */
 
   .workflow-action-btn {
     flex-shrink: 0;
@@ -447,9 +464,9 @@
     height: 22px;
     padding: 0;
     border: 1px solid transparent;
-    border-radius: 4px;
+    border-radius: var(--zf-radius-sm);
     background: transparent;
-    color: #aaa;
+    color: var(--zf-text-muted);
     cursor: pointer;
     opacity: 0;
     transition:
@@ -463,44 +480,120 @@
   }
 
   .workflow-action-btn:hover {
-    color: #444;
-    background: #efefef;
-    border-color: #ddd;
+    color: var(--zf-text-primary);
+    background: var(--zf-surface-hover);
+    border-color: var(--zf-border);
   }
 
   .workflow-delete-btn:hover {
-    color: #c0392b;
-    background: #fdecea;
-    border-color: #f5c6c2;
+    color: var(--zf-danger);
+    background: var(--zf-danger-soft);
+    border-color: var(--zf-danger-border);
   }
 
   .workflow-action-btn--disabled {
     cursor: not-allowed;
-    color: #ccc;
+    color: var(--zf-border-strong);
   }
 
   .workflow-action-btn--disabled:hover {
-    color: #ccc;
+    color: var(--zf-border-strong);
     background: transparent;
     border-color: transparent;
   }
 
+  /* -------------------------------------------------------------------------
+     Add workflow
+  ------------------------------------------------------------------------- */
+
+  .add-workflow-btn {
+    margin-top: auto;
+    padding: 0.375rem 0.75rem;
+    border: 1px dashed var(--zf-border-strong);
+    border-radius: var(--zf-radius-sm);
+    background: transparent;
+    font-size: 0.78rem;
+    color: var(--zf-text-muted);
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition:
+      border-color 0.1s,
+      color 0.1s,
+      background 0.1s;
+  }
+
+  .add-workflow-btn:hover {
+    border-color: var(--zf-accent);
+    color: var(--zf-accent);
+    background: var(--zf-accent-soft);
+  }
+
+  /* -------------------------------------------------------------------------
+     Palette items — card style
+  ------------------------------------------------------------------------- */
+
+  .palette-item {
+    padding: 0.35rem 0.625rem;
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
+    background: var(--zf-panel-bg);
+    font-size: 0.78rem;
+    color: var(--zf-text-secondary);
+    cursor: grab;
+    user-select: none;
+    box-shadow: var(--zf-shadow-xs);
+    font-family: inherit;
+    transition:
+      border-color 0.1s,
+      background 0.1s,
+      box-shadow 0.1s;
+  }
+
+  .palette-item:hover {
+    border-color: var(--zf-border-strong);
+    background: var(--zf-surface-hover);
+    box-shadow: var(--zf-shadow-sm);
+    color: var(--zf-text-primary);
+  }
+
+  .palette-item:active {
+    cursor: grabbing;
+    box-shadow: var(--zf-shadow-xs);
+  }
+
+  .palette-item--control {
+    border-color: var(--zf-accent-border);
+    color: var(--zf-accent);
+    background: var(--zf-accent-soft);
+  }
+
+  .palette-item--control:hover {
+    border-color: var(--zf-accent);
+    background: var(--zf-accent-soft);
+    color: var(--zf-accent-hover);
+  }
+
+  /* -------------------------------------------------------------------------
+     Confirmation modal
+  ------------------------------------------------------------------------- */
+
   .delete-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.45);
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(2px);
   }
 
   .delete-dialog {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow:
-      0 4px 24px rgba(0, 0, 0, 0.18),
-      0 1px 4px rgba(0, 0, 0, 0.1);
+    background: var(--zf-panel-bg);
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-lg);
+    box-shadow: var(--zf-shadow-lg);
     padding: 1.5rem;
     max-width: 360px;
     width: 90%;
@@ -510,12 +603,12 @@
     font-size: 1rem;
     font-weight: 600;
     margin: 0 0 0.5rem 0;
-    color: #1a1a1a;
+    color: var(--zf-text-primary);
   }
 
   .delete-dialog-message {
     font-size: 0.875rem;
-    color: #555;
+    color: var(--zf-text-secondary);
     margin: 0 0 1.25rem 0;
     line-height: 1.5;
   }
@@ -528,86 +621,36 @@
 
   .delete-dialog-cancel {
     padding: 0.375rem 0.875rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
+    background: var(--zf-panel-bg);
     font-size: 0.875rem;
-    color: #444;
+    color: var(--zf-text-secondary);
     cursor: pointer;
+    font-family: inherit;
     transition: background 0.1s;
   }
 
   .delete-dialog-cancel:hover {
-    background: #f5f5f5;
+    background: var(--zf-surface-hover);
   }
 
   .delete-dialog-confirm {
     padding: 0.375rem 0.875rem;
-    border: 1px solid #c0392b;
-    border-radius: 6px;
-    background: #c0392b;
+    border: 1px solid var(--zf-danger);
+    border-radius: var(--zf-radius-sm);
+    background: var(--zf-danger);
     font-size: 0.875rem;
     color: #fff;
     cursor: pointer;
-    transition: background 0.1s;
+    font-family: inherit;
+    transition:
+      background 0.1s,
+      border-color 0.1s;
   }
 
   .delete-dialog-confirm:hover {
-    background: #a93226;
-    border-color: #a93226;
-  }
-
-  .add-workflow-btn {
-    margin-top: auto;
-    padding: 0.375rem 0.75rem;
-    border: 1px dashed #ccc;
-    border-radius: 6px;
-    background: transparent;
-    font-size: 0.8rem;
-    color: #666;
-    cursor: pointer;
-    text-align: left;
-    transition:
-      border-color 0.1s,
-      color 0.1s;
-  }
-
-  .add-workflow-btn:hover {
-    border-color: #999;
-    color: #333;
-  }
-
-  .palette-item {
-    padding: 0.3rem 0.625rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
-    font-size: 0.8rem;
-    color: #444;
-    cursor: grab;
-    user-select: none;
-    transition:
-      border-color 0.1s,
-      background 0.1s;
-  }
-
-  .palette-item:hover {
-    border-color: #aaa;
-    background: #f5f5f5;
-  }
-
-  .palette-item:active {
-    cursor: grabbing;
-  }
-
-  .palette-item--control {
-    border-color: #c5d8ff;
-    color: #1a56cc;
-    background: #f0f5ff;
-  }
-
-  .palette-item--control:hover {
-    border-color: #7eaaff;
-    background: #e8f0fe;
+    background: #b91c1c;
+    border-color: #b91c1c;
   }
 </style>

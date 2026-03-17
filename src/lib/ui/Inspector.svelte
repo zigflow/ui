@@ -547,23 +547,33 @@
 {/if}
 
 <style>
+  /* -------------------------------------------------------------------------
+     Inspector shell
+  ------------------------------------------------------------------------- */
+
   .inspector {
-    width: 260px;
-    min-width: 260px;
-    border-left: 1px solid #ddd;
-    background: #fff;
+    width: 268px;
+    min-width: 268px;
+    border-left: 1px solid var(--zf-border);
+    background: var(--zf-panel-bg);
     display: flex;
     flex-direction: column;
     padding: 1rem;
     overflow-y: auto;
     font-size: 0.875rem;
+    font-family: var(--zf-font);
+    color: var(--zf-text-primary);
   }
 
   .inspector-empty {
-    color: #888;
+    color: var(--zf-text-muted);
     font-style: italic;
     margin: 0;
   }
+
+  /* -------------------------------------------------------------------------
+     Node header
+  ------------------------------------------------------------------------- */
 
   .inspector-header {
     margin-bottom: 1rem;
@@ -571,43 +581,48 @@
 
   .inspector-type {
     display: inline-block;
-    background: #e8f0fe;
-    color: #1a56cc;
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    background: var(--zf-accent-soft);
+    color: var(--zf-accent);
+    border-radius: var(--zf-radius-sm);
+    padding: 2px 7px;
+    font-size: 0.68rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.07em;
     margin-bottom: 0.5rem;
   }
 
   .field-label {
     display: block;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 500;
-    color: #666;
-    margin-bottom: 0.2rem;
+    color: var(--zf-text-muted);
+    margin-bottom: 0.25rem;
   }
 
   .name-input {
     width: 100%;
-    padding: 0.3rem 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
     font-size: 0.875rem;
     font-weight: 600;
     font-family: inherit;
-    color: #111;
-    background: #fff;
+    color: var(--zf-text-primary);
+    background: var(--zf-panel-bg);
     box-sizing: border-box;
+    transition: border-color 0.1s;
   }
 
   .name-input:focus {
     outline: none;
-    border-color: #1a56cc;
-    box-shadow: 0 0 0 2px rgba(26, 86, 204, 0.15);
+    border-color: var(--zf-accent);
+    box-shadow: 0 0 0 2px rgba(var(--zf-accent-rgb), 0.15);
   }
+
+  /* -------------------------------------------------------------------------
+     Node ID section
+  ------------------------------------------------------------------------- */
 
   .inspector-section {
     flex: 1;
@@ -621,40 +636,42 @@
   }
 
   dt {
-    color: #666;
+    color: var(--zf-text-muted);
     font-weight: 500;
     white-space: nowrap;
+    font-size: 0.78rem;
   }
 
   dd {
     margin: 0;
     word-break: break-all;
-    color: #111;
+    color: var(--zf-text-secondary);
+    font-size: 0.78rem;
   }
 
   .mono {
-    font-family: monospace;
-    font-size: 0.8em;
-    color: #555;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75em;
+    color: var(--zf-text-muted);
   }
 
   /* -------------------------------------------------------------------------
-     Branch / structural management
+     Branch / structural sections
   ------------------------------------------------------------------------- */
 
   .inspector-branches {
     margin-top: 1rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--zf-border);
   }
 
   .inspector-section-title {
     margin: 0 0 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #444;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--zf-text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.07em;
   }
 
   /* -------------------------------------------------------------------------
@@ -662,13 +679,14 @@
   ------------------------------------------------------------------------- */
 
   .switch-branch-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
     padding: 0.5rem 0.6rem;
     margin-bottom: 0.5rem;
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
+    background: var(--zf-surface);
   }
 
   .switch-branch-card-header {
@@ -679,56 +697,62 @@
   }
 
   .switch-default-badge {
-    font-size: 0.68rem;
-    font-weight: 600;
+    font-size: 0.65rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #7c3aed;
-    background: #f3f0ff;
+    letter-spacing: 0.05em;
+    color: var(--zf-accent);
+    background: var(--zf-accent-soft);
     border-radius: 3px;
     padding: 1px 5px;
   }
 
+  /* -------------------------------------------------------------------------
+     Form inputs
+  ------------------------------------------------------------------------- */
+
   .text-input {
     width: 100%;
     padding: 0.25rem 0.4rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
     font-size: 0.78rem;
     font-family: inherit;
-    color: #111;
-    background: #fff;
+    color: var(--zf-text-primary);
+    background: var(--zf-panel-bg);
     box-sizing: border-box;
     margin-bottom: 0.2rem;
+    transition: border-color 0.1s;
   }
 
   .text-input--mono {
-    font-family: monospace;
+    font-family: 'Courier New', monospace;
   }
 
   .text-input:focus {
     outline: none;
-    border-color: #1a56cc;
-    box-shadow: 0 0 0 2px rgba(26, 86, 204, 0.15);
+    border-color: var(--zf-accent);
+    box-shadow: 0 0 0 2px rgba(var(--zf-accent-rgb), 0.15);
   }
 
   .select-input {
     width: 100%;
     padding: 0.25rem 0.4rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
     font-size: 0.78rem;
     font-family: inherit;
-    color: #111;
-    background: #fff;
+    color: var(--zf-text-primary);
+    background: var(--zf-panel-bg);
     box-sizing: border-box;
     margin-bottom: 0.2rem;
+    transition: border-color 0.1s;
   }
 
   .select-input:focus {
     outline: none;
-    border-color: #1a56cc;
-    box-shadow: 0 0 0 2px rgba(26, 86, 204, 0.15);
+    border-color: var(--zf-accent);
+    box-shadow: 0 0 0 2px rgba(var(--zf-accent-rgb), 0.15);
   }
 
   .field-warning {
@@ -745,7 +769,7 @@
   }
 
   /* -------------------------------------------------------------------------
-     Fork branch list (unchanged)
+     Fork branch list
   ------------------------------------------------------------------------- */
 
   .branch-list {
@@ -767,22 +791,23 @@
     flex: 1;
     min-width: 0;
     padding: 0.25rem 0.5rem;
-    background: #f0f4ff;
-    border: 1px solid #c5d5f5;
-    border-radius: 4px;
-    font-size: 0.8rem;
+    background: var(--zf-accent-soft);
+    border: 1px solid var(--zf-accent-border);
+    border-radius: var(--zf-radius-sm);
+    font-size: 0.78rem;
     font-family: inherit;
-    color: #1a56cc;
+    color: var(--zf-accent);
     cursor: pointer;
     text-align: left;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: background 0.1s;
   }
 
   .branch-label-btn:hover {
-    background: #e0eaff;
-    border-color: #1a56cc;
+    background: var(--zf-accent-border);
+    border-color: var(--zf-accent);
   }
 
   .branch-item--warn {
@@ -791,7 +816,7 @@
 
   .branch-warning {
     width: 100%;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: #b45309;
   }
 
@@ -799,76 +824,86 @@
     flex: 1;
     min-width: 0;
     padding: 0.25rem 0.5rem;
-    border: 1px solid #1a56cc;
-    border-radius: 4px;
-    font-size: 0.8rem;
+    border: 1px solid var(--zf-accent);
+    border-radius: var(--zf-radius-sm);
+    font-size: 0.78rem;
     font-family: inherit;
     outline: none;
-    background: #fff;
+    background: var(--zf-panel-bg);
+    color: var(--zf-text-primary);
+    box-shadow: 0 0 0 2px rgba(var(--zf-accent-rgb), 0.15);
   }
 
   .branch-action-btn {
     flex-shrink: 0;
     padding: 0.2rem 0.375rem;
     background: transparent;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    color: #555;
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
+    color: var(--zf-text-muted);
     cursor: pointer;
     line-height: 1;
     display: flex;
     align-items: center;
+    transition: background 0.1s;
   }
 
   .branch-action-btn:hover {
-    background: #f0f0f0;
-    border-color: #999;
+    background: var(--zf-surface-hover);
+    border-color: var(--zf-border-strong);
+    color: var(--zf-text-primary);
   }
 
   .branch-action-btn--delete {
-    border-color: #e0a0a0;
-    color: #c0392b;
+    border-color: var(--zf-danger-border);
+    color: var(--zf-danger);
   }
 
   .branch-action-btn--delete:hover {
-    background: #fff0f0;
-    border-color: #c0392b;
+    background: var(--zf-danger-soft);
+    border-color: var(--zf-danger);
   }
 
   .branch-remove-btn {
     padding: 0.2rem 0.375rem;
     background: transparent;
-    border: 1px solid #e0a0a0;
-    border-radius: 4px;
-    color: #c0392b;
+    border: 1px solid var(--zf-danger-border);
+    border-radius: var(--zf-radius-sm);
+    color: var(--zf-danger);
     font-size: 0.72rem;
     cursor: pointer;
     line-height: 1;
+    transition: background 0.1s;
   }
 
   .branch-remove-btn:hover {
-    background: #fff0f0;
+    background: var(--zf-danger-soft);
   }
 
   .branch-add-btn {
     width: 100%;
     padding: 0.3rem 0.5rem;
     background: transparent;
-    border: 1px dashed #aaa;
-    border-radius: 4px;
-    color: #555;
+    border: 1px dashed var(--zf-border-strong);
+    border-radius: var(--zf-radius-sm);
+    color: var(--zf-text-muted);
     font-size: 0.78rem;
+    font-family: inherit;
     cursor: pointer;
     text-align: center;
+    transition:
+      border-color 0.1s,
+      color 0.1s,
+      background 0.1s;
   }
 
   .branch-add-btn:hover {
-    border-color: #1a56cc;
-    color: #1a56cc;
-    background: #f0f4ff;
+    border-color: var(--zf-accent);
+    color: var(--zf-accent);
+    background: var(--zf-accent-soft);
   }
 
-  /* Try sections */
+  /* Try / Loop navigation buttons */
 
   .try-sections {
     display: flex;
@@ -876,40 +911,26 @@
     gap: 0.375rem;
   }
 
-  .try-section-btn {
-    width: 100%;
-    padding: 0.35rem 0.6rem;
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    color: #333;
-    font-size: 0.8rem;
-    cursor: pointer;
-    text-align: left;
-  }
-
-  .try-section-btn:hover {
-    background: #eee;
-    border-color: #aaa;
-  }
-
-  /* Loop body */
-
+  .try-section-btn,
   .loop-enter-btn {
     width: 100%;
     padding: 0.35rem 0.6rem;
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    color: #333;
-    font-size: 0.8rem;
+    background: var(--zf-surface);
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
+    color: var(--zf-text-secondary);
+    font-size: 0.78rem;
+    font-family: inherit;
     cursor: pointer;
     text-align: left;
+    transition: background 0.1s;
   }
 
+  .try-section-btn:hover,
   .loop-enter-btn:hover {
-    background: #eee;
-    border-color: #aaa;
+    background: var(--zf-accent-soft);
+    border-color: var(--zf-accent-border);
+    color: var(--zf-accent);
   }
 
   /* -------------------------------------------------------------------------
@@ -926,10 +947,11 @@
     flex: 1;
     padding: 0.375rem 0.5rem;
     background: transparent;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    color: #444;
-    font-size: 0.8rem;
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
+    color: var(--zf-text-secondary);
+    font-size: 0.78rem;
+    font-family: inherit;
     cursor: pointer;
     transition:
       background 0.1s,
@@ -937,8 +959,9 @@
   }
 
   .move-btn:hover:not(:disabled) {
-    background: #f5f5f5;
-    border-color: #aaa;
+    background: var(--zf-surface-hover);
+    border-color: var(--zf-border-strong);
+    color: var(--zf-text-primary);
   }
 
   .move-btn:disabled {
@@ -951,10 +974,11 @@
     width: 100%;
     padding: 0.375rem 0.75rem;
     background: transparent;
-    border: 1px solid #e0a0a0;
-    border-radius: 6px;
-    color: #c0392b;
-    font-size: 0.8rem;
+    border: 1px solid var(--zf-danger-border);
+    border-radius: var(--zf-radius-sm);
+    color: var(--zf-danger);
+    font-size: 0.78rem;
+    font-family: inherit;
     cursor: pointer;
     transition:
       background 0.1s,
@@ -962,8 +986,8 @@
   }
 
   .delete-btn:hover {
-    background: #fff0f0;
-    border-color: #c0392b;
+    background: var(--zf-danger-soft);
+    border-color: var(--zf-danger);
   }
 
   /* -------------------------------------------------------------------------
@@ -973,19 +997,19 @@
   .delete-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.45);
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(2px);
   }
 
   .delete-dialog {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow:
-      0 4px 24px rgba(0, 0, 0, 0.18),
-      0 1px 4px rgba(0, 0, 0, 0.1);
+    background: var(--zf-panel-bg);
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-lg);
+    box-shadow: var(--zf-shadow-lg);
     padding: 1.5rem;
     max-width: 360px;
     width: 90%;
@@ -995,12 +1019,12 @@
     font-size: 1rem;
     font-weight: 600;
     margin: 0 0 0.5rem 0;
-    color: #1a1a1a;
+    color: var(--zf-text-primary);
   }
 
   .delete-dialog-message {
     font-size: 0.875rem;
-    color: #555;
+    color: var(--zf-text-secondary);
     margin: 0 0 1.25rem 0;
     line-height: 1.5;
   }
@@ -1013,32 +1037,36 @@
 
   .delete-dialog-cancel {
     padding: 0.375rem 0.875rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #fff;
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-sm);
+    background: var(--zf-panel-bg);
     font-size: 0.875rem;
-    color: #444;
+    font-family: inherit;
+    color: var(--zf-text-secondary);
     cursor: pointer;
     transition: background 0.1s;
   }
 
   .delete-dialog-cancel:hover {
-    background: #f5f5f5;
+    background: var(--zf-surface-hover);
   }
 
   .delete-dialog-confirm {
     padding: 0.375rem 0.875rem;
-    border: 1px solid #c0392b;
-    border-radius: 6px;
-    background: #c0392b;
+    border: 1px solid var(--zf-danger);
+    border-radius: var(--zf-radius-sm);
+    background: var(--zf-danger);
     font-size: 0.875rem;
+    font-family: inherit;
     color: #fff;
     cursor: pointer;
-    transition: background 0.1s;
+    transition:
+      background 0.1s,
+      border-color 0.1s;
   }
 
   .delete-dialog-confirm:hover {
-    background: #a93226;
-    border-color: #a93226;
+    background: #b91c1c;
+    border-color: #b91c1c;
   }
 </style>

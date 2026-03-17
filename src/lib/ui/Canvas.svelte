@@ -336,6 +336,56 @@
   .canvas-root {
     width: 100%;
     height: 100%;
-    background: #f8f8f8;
+    background: var(--zf-bg);
+  }
+
+  /* Svelte Flow chrome — controls panel */
+  .canvas-root :global(.svelte-flow__controls) {
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-md);
+    background: var(--zf-panel-bg);
+    box-shadow: var(--zf-shadow-sm);
+    overflow: hidden;
+  }
+
+  .canvas-root :global(.svelte-flow__controls-button) {
+    background: var(--zf-panel-bg);
+    border-bottom: 1px solid var(--zf-border-muted);
+    color: var(--zf-text-secondary);
+    fill: var(--zf-text-secondary);
+  }
+
+  .canvas-root :global(.svelte-flow__controls-button:last-child) {
+    border-bottom: none;
+  }
+
+  .canvas-root :global(.svelte-flow__controls-button:hover) {
+    background: var(--zf-surface-hover);
+    color: var(--zf-accent);
+    fill: var(--zf-accent);
+  }
+
+  /* Edge lines */
+  .canvas-root :global(.svelte-flow__edge-path) {
+    stroke: var(--zf-border-strong);
+    stroke-width: 1.5;
+  }
+
+  .canvas-root :global(.svelte-flow__edge.selected .svelte-flow__edge-path) {
+    stroke: var(--zf-accent);
+  }
+
+  /* Connection handles */
+  .canvas-root :global(.svelte-flow__handle) {
+    background: var(--zf-node-border);
+    border: 2px solid var(--zf-node-bg);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .canvas-root :global(.svelte-flow__handle:hover) {
+    background: var(--zf-accent);
+    border-color: var(--zf-accent-soft);
   }
 </style>

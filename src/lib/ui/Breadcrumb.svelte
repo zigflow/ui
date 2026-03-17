@@ -58,15 +58,15 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.375rem 1rem;
-    border-bottom: 1px solid #eee;
-    background: #fff;
+    border-bottom: 1px solid var(--zf-border);
+    background: var(--zf-panel-bg);
     font-size: 0.8rem;
-    color: #555;
+    color: var(--zf-text-secondary);
     min-height: 2rem;
   }
 
   .breadcrumb-sep {
-    color: #bbb;
+    color: var(--zf-text-muted);
   }
 
   .breadcrumb-item {
@@ -78,7 +78,7 @@
   }
 
   .breadcrumb-item--link {
-    color: #1a56cc;
+    color: var(--zf-accent);
     cursor: pointer;
     text-decoration: none;
   }
@@ -88,7 +88,7 @@
   }
 
   .breadcrumb-item--current {
-    color: #333;
+    color: var(--zf-text-primary);
     font-weight: 500;
   }
 </style>
