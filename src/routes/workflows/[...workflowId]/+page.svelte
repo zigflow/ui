@@ -1043,7 +1043,7 @@
     height: 100%;
     display: flex;
     overflow: hidden;
-    font-family: system-ui, sans-serif;
+    font-family: var(--zf-font);
   }
 
   .editor-main {
@@ -1057,8 +1057,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #eee;
-    background: #fff;
+    border-bottom: 1px solid var(--zf-border);
+    background: var(--zf-panel-bg);
     padding-right: 1rem;
   }
 
@@ -1070,25 +1070,26 @@
 
   .save-status {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--zf-text-muted);
     white-space: nowrap;
   }
 
   .save-btn {
     padding: 0.3rem 0.75rem;
-    background: #fff;
-    color: #333;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    background: var(--zf-panel-bg);
+    color: var(--zf-text-primary);
+    border: 1px solid var(--zf-border-strong);
+    border-radius: var(--zf-radius-sm);
     font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
+    font-family: var(--zf-font);
   }
 
   .save-btn:hover:not(:disabled) {
-    background: #f5f5f5;
-    border-color: #aaa;
+    background: var(--zf-surface-hover);
+    border-color: var(--zf-text-muted);
   }
 
   .save-btn:disabled {
@@ -1098,18 +1099,19 @@
 
   .export-btn {
     padding: 0.3rem 0.75rem;
-    background: #1a56cc;
+    background: var(--zf-accent);
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--zf-radius-sm);
     font-size: 0.8rem;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
+    font-family: var(--zf-font);
   }
 
   .export-btn:hover {
-    background: #1344a8;
+    background: var(--zf-accent-hover);
   }
 
   .editor-canvas-area {
@@ -1123,7 +1125,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #888;
+    color: var(--zf-text-muted);
     font-size: 0.9rem;
   }
 
@@ -1131,7 +1133,8 @@
   .export-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1139,9 +1142,10 @@
   }
 
   .export-dialog {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    background: var(--zf-panel-bg);
+    border: 1px solid var(--zf-border);
+    border-radius: var(--zf-radius-lg);
+    box-shadow: var(--zf-shadow-lg);
     width: min(720px, 90vw);
     max-height: 80vh;
     display: flex;
@@ -1154,12 +1158,14 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--zf-border);
   }
 
   .export-dialog-header h2 {
     margin: 0;
     font-size: 1rem;
+    color: var(--zf-text-primary);
+    font-family: var(--zf-font);
   }
 
   .export-close-btn {
@@ -1167,9 +1173,14 @@
     border: none;
     font-size: 1rem;
     cursor: pointer;
-    color: #666;
+    color: var(--zf-text-muted);
     padding: 0.25rem;
     line-height: 1;
+    font-family: var(--zf-font);
+  }
+
+  .export-close-btn:hover {
+    color: var(--zf-text-primary);
   }
 
   .export-code,
@@ -1181,10 +1192,11 @@
     font-size: 0.8rem;
     white-space: pre-wrap;
     font-family: 'Courier New', monospace;
+    color: var(--zf-text-primary);
   }
 
   .export-error {
-    color: #c0392b;
-    background: #fff5f5;
+    color: var(--zf-danger);
+    background: var(--zf-danger-soft);
   }
 </style>

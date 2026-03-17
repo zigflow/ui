@@ -79,7 +79,7 @@
   function accentColor(type: string): string {
     switch (type) {
       case 'switch':
-        return '#d97706';
+        return '#ea580c';
       case 'fork':
         return '#2563eb';
       case 'try':
@@ -87,7 +87,55 @@
       case 'loop':
         return '#16a34a';
       default:
-        return '#6b7280';
+        return '#7c3aed'; // task → Zigflow purple
+    }
+  }
+
+  // Inline SVG icons (lucide-style, 12×12, stroke-based).
+  // Strings are static source-code constants — no user input, no XSS risk.
+  function nodeIcon(type: string): string {
+    const a =
+      'width="12" height="12" viewBox="0 0 16 16" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.5" ' +
+      'stroke-linecap="round" stroke-linejoin="round"';
+    switch (type) {
+      case 'switch':
+        // shuffle / decision arrows
+        return (
+          `<svg ${a}>` +
+          '<path d="M2 5h10"/><path d="M8 2l4 3-4 3"/>' +
+          '<path d="M2 11h10"/><path d="M6 8l-4 3 4 3"/>' +
+          '</svg>'
+        );
+      case 'fork':
+        // git-branch
+        return (
+          `<svg ${a}>` +
+          '<circle cx="5" cy="4" r="1.5"/>' +
+          '<circle cx="5" cy="12" r="1.5"/>' +
+          '<circle cx="11" cy="7" r="1.5"/>' +
+          '<line x1="5" y1="5.5" x2="5" y2="10.5"/>' +
+          '<path d="M5 5.5C5 7.5 7 8.5 11 8.5"/>' +
+          '</svg>'
+        );
+      case 'try':
+        // shield
+        return (
+          `<svg ${a}>` +
+          '<path d="M8 2L2 5v4c0 2.8 2.3 4.7 6 5.5 3.7-.8 6-2.7 6-5.5V5z"/>' +
+          '</svg>'
+        );
+      case 'loop':
+        // repeat / refresh
+        return (
+          `<svg ${a}>` +
+          '<path d="M2 8a6 6 0 1 1 1.2 3.6"/>' +
+          '<polyline points="2 12 2 8 6 8"/>' +
+          '</svg>'
+        );
+      default:
+        // task → zap / lightning
+        return `<svg ${a}>` + '<path d="M9 2L4 9h5l-2 5 7-7H9z"/>' + '</svg>';
     }
   }
 </script>
@@ -109,6 +157,11 @@
   {#if isStructural}
     <!-- Structural layout: fixed header + clickable nav rows -->
     <div class="flow-node-header">
+      <!-- eslint-disable svelte/no-at-html-tags -- nodeIcon returns a hardcoded static SVG string; no user input, no XSS risk -->
+      <span class="flow-node-icon" aria-hidden="true"
+        >{@html nodeIcon(data.nodeType)}</span
+      >
+      <!-- eslint-enable svelte/no-at-html-tags -->
       <span class="flow-node-type">{data.typeLabel}</span>
       <span class="flow-node-name">{data.label}</span>
     </div>
@@ -143,12 +196,19 @@
       </ul>
     {/if}
   {:else}
-    <!-- Task layout: horizontal, centered -->
+    <!-- Task layout: icon + stacked type/name -->
     <div class="flow-node-body">
-      <span class="flow-node-type">{data.typeLabel}</span>
-      <span class="flow-node-name" data-selected={selected ? 'true' : null}
-        >{data.label}</span
+      <!-- eslint-disable svelte/no-at-html-tags -- nodeIcon returns a hardcoded static SVG string; no user input, no XSS risk -->
+      <span class="flow-node-icon" aria-hidden="true"
+        >{@html nodeIcon(data.nodeType)}</span
       >
+      <!-- eslint-enable svelte/no-at-html-tags -->
+      <div class="flow-node-body-text">
+        <span class="flow-node-type">{data.typeLabel}</span>
+        <span class="flow-node-name" data-selected={selected ? 'true' : null}
+          >{data.label}</span
+        >
+      </div>
     </div>
   {/if}
 
@@ -157,43 +217,58 @@
 
 <style>
   /* -------------------------------------------------------------------------
-     Base
+     Base card
   ------------------------------------------------------------------------- */
 
   .flow-node {
     width: 100%;
     height: 100%;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-left: 3px solid var(--accent);
-    border-radius: 6px;
+    background: var(--zf-node-bg);
+    border: 1px solid var(--zf-node-border);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--zf-radius-md);
     box-sizing: border-box;
     display: flex;
     align-items: center;
     overflow: hidden;
-    font-family: system-ui, sans-serif;
+    font-family: var(--zf-font);
     font-size: 0.75rem;
+    color: var(--zf-text-primary);
     cursor: pointer;
-    transition: box-shadow 0.1s;
+    box-shadow: var(--zf-shadow-sm);
+    transition:
+      box-shadow 0.12s,
+      border-color 0.12s;
   }
 
   .flow-node--structural {
     flex-direction: column;
     align-items: stretch;
-    background: #fafafa;
+    background: var(--zf-node-bg-structural);
   }
 
   .flow-node--selected {
-    box-shadow: 0 0 0 2px var(--accent);
     border-color: var(--accent);
+    box-shadow:
+      var(--zf-shadow-sm),
+      0 0 0 3px rgba(var(--zf-accent-rgb), 0.18);
   }
 
   /* -------------------------------------------------------------------------
-     Task layout (horizontal)
+     Task layout — icon + stacked text
   ------------------------------------------------------------------------- */
 
   .flow-node-body {
-    padding: 0 0.625rem;
+    padding: 0 0.75rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .flow-node-body-text {
     display: flex;
     flex-direction: column;
     gap: 1px;
@@ -202,17 +277,18 @@
   }
 
   /* -------------------------------------------------------------------------
-     Structural layout (vertical: header + rows)
+     Structural layout — header + rows
   ------------------------------------------------------------------------- */
 
   .flow-node-header {
-    height: 28px;
+    height: 30px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0 0.5rem;
-    border-bottom: 1px solid #eee;
+    padding: 0 0.625rem;
+    border-bottom: 1px solid var(--zf-border-muted);
+    background: var(--zf-node-bg);
   }
 
   .flow-node-rows {
@@ -227,16 +303,16 @@
   .flow-node-row {
     height: 22px;
     width: 100%;
-    padding: 0 0.5rem;
+    padding: 0 0.625rem;
     display: flex;
     align-items: center;
     gap: 0.25rem;
     background: transparent;
     border: none;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--zf-border-muted);
     cursor: pointer;
     font-size: 0.7rem;
-    color: #555;
+    color: var(--zf-text-secondary);
     font-family: inherit;
     text-align: left;
     white-space: nowrap;
@@ -246,35 +322,50 @@
   }
 
   .flow-node-row:hover {
-    background: #f0f4ff;
-    color: #1a56cc;
+    background: var(--zf-accent-soft);
+    color: var(--zf-accent);
   }
 
   .flow-node-row-arrow {
     color: var(--accent);
     flex-shrink: 0;
     font-size: 0.65rem;
+    opacity: 0.7;
   }
 
   /* -------------------------------------------------------------------------
-     Shared type / name spans (used in both layouts)
+     Icon
+  ------------------------------------------------------------------------- */
+
+  .flow-node-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    opacity: 0.85;
+  }
+
+  /* -------------------------------------------------------------------------
+     Type badge + name (shared)
   ------------------------------------------------------------------------- */
 
   .flow-node-type {
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.07em;
     color: var(--accent);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     flex-shrink: 0;
+    opacity: 0.9;
   }
 
   .flow-node-name {
+    font-size: 0.78rem;
     font-weight: 500;
-    color: #111;
+    color: var(--zf-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -290,13 +381,14 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0 0.5rem;
-    border-bottom: 1px solid #eee;
+    padding: 0 0.625rem;
+    border-bottom: 1px solid var(--zf-border-muted);
     overflow: hidden;
+    background: var(--zf-node-bg-structural);
   }
 
   .flow-node-loop-for {
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     font-weight: 700;
     text-transform: lowercase;
     letter-spacing: 0.04em;
@@ -306,8 +398,8 @@
 
   .flow-node-loop-expr-val {
     font-size: 0.68rem;
-    font-family: monospace;
-    color: #444;
+    font-family: 'Courier New', monospace;
+    color: var(--zf-text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

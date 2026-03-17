@@ -41,11 +41,11 @@
 <style>
   .context-indicator {
     padding: 0.3rem 1rem;
-    background: #f0f4ff;
-    border-bottom: 1px solid #dde4f5;
+    background: var(--zf-accent-soft);
+    border-bottom: 1px solid var(--zf-accent-border);
     font-size: 0.78rem;
     font-weight: 500;
-    color: #2a4580;
+    color: var(--zf-accent);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
