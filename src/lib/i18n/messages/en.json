@@ -429,6 +429,14 @@
       "errorNameDuplicate": "Duplicate name"
     }
   },
+  "valueSource": {
+    "sourceLabel": "Value source",
+    "valueLabel": "Value",
+    "input": "Input",
+    "literal": "Literal",
+    "expression": "Expression",
+    "noInputPaths": "No input fields defined"
+  },
   "validation": {
     "loop": {
       "collectionRequired": "Collection is required",

@@ -22,6 +22,7 @@
     SetConfig,
     TaskNode,
   } from '$lib/tasks/model';
+  import ValueSourceSelector from '$lib/ui/ValueSourceSelector.svelte';
 
   import {
     type ValueOverride,
@@ -33,9 +34,10 @@
   interface Props {
     node: Node;
     onupdate: (node: Node) => void;
+    inputPaths?: string[];
   }
 
-  let { node, onupdate }: Props = $props();
+  let { node, onupdate, inputPaths = [] }: Props = $props();
 
   // Safe narrowing: registry guarantees this editor only receives set nodes.
   const setNode = $derived(node as TaskNode);
@@ -174,6 +176,9 @@
       {#each entries as [key, val], i (i)}
         {@const override = getOverride(key, val)}
         {@const error = errors[key] ?? null}
+        {@const isStringValue =
+          override === 'string' ||
+          (override === 'auto' && typeof val === 'string')}
         <li class="assignment-item">
           <!-- Row 1: key input + remove button -->
           <div class="assignment-row assignment-row--key">
@@ -193,18 +198,29 @@
               ✕
             </button>
           </div>
-          <!-- Row 2: value input + type override select -->
+          <!-- Row 2: value editor + type override select.
+               String values use ValueSourceSelector (supports input/literal/expression).
+               Non-string values (number, boolean, null) use the plain text input. -->
           <div class="assignment-row assignment-row--value">
-            <input
-              class="assignment-input"
-              class:assignment-input--error={error !== null}
-              type="text"
-              aria-label={t('inspector.set.valueLabel')}
-              value={displayValue(val)}
-              disabled={override === 'null'}
-              oninput={(e) =>
-                handleValueChange(i, key, val, e.currentTarget.value)}
-            />
+            {#if isStringValue}
+              <ValueSourceSelector
+                value={val as string}
+                {inputPaths}
+                ariaLabel={t('inspector.set.valueLabel')}
+                onchange={(v) => handleValueChange(i, key, val, v)}
+              />
+            {:else}
+              <input
+                class="assignment-input"
+                class:assignment-input--error={error !== null}
+                type="text"
+                aria-label={t('inspector.set.valueLabel')}
+                value={displayValue(val)}
+                disabled={override === 'null'}
+                oninput={(e) =>
+                  handleValueChange(i, key, val, e.currentTarget.value)}
+              />
+            {/if}
             <select
               class="override-select"
               aria-label={t('inspector.set.overrideLabel', { key })}

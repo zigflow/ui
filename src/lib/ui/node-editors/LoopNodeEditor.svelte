@@ -17,13 +17,15 @@
 <script lang="ts">
   import { t } from '$lib/i18n/index.svelte';
   import type { LoopNode, Node } from '$lib/tasks/model';
+  import ValueSourceSelector from '$lib/ui/ValueSourceSelector.svelte';
 
   interface Props {
     node: Node;
     onupdate: (node: Node) => void;
+    inputPaths?: string[];
   }
 
-  let { node, onupdate }: Props = $props();
+  let { node, onupdate, inputPaths = [] }: Props = $props();
 
   // Safe narrowing: registry guarantees this editor only receives loop nodes.
   const loopNode = $derived(node as LoopNode);
@@ -54,14 +56,12 @@
 
   <dl class="loop-fields">
     <dt class="field-label">{t('inspector.loop.collection')}</dt>
-    <dd class="field-value">
-      <input
-        class="loop-input"
-        class:loop-input--invalid={collectionEmpty}
-        type="text"
-        aria-label={t('inspector.loop.collection')}
+    <dd class="field-value" class:field-value--invalid={collectionEmpty}>
+      <ValueSourceSelector
         value={loopNode.in}
-        oninput={(e) => onupdate({ ...loopNode, in: e.currentTarget.value })}
+        {inputPaths}
+        ariaLabel={t('inspector.loop.collection')}
+        onchange={(v) => onupdate({ ...loopNode, in: v })}
       />
       {#if collectionEmpty}
         <p class="field-warning">
