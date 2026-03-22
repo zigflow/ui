@@ -31,6 +31,7 @@
     SwitchNode,
   } from '$lib/tasks/model';
 
+  import ValueSourceSelector from './ValueSourceSelector.svelte';
   import CommonFields from './inspector/CommonFields.svelte';
   import { getNodeEditor } from './node-editors/registry';
 
@@ -56,6 +57,8 @@
     // Workflow list for switch branch target selection
     workflows?: NamedWorkflow[];
     currentWorkflowName?: string;
+    /** Flat dot-notation paths from the workflow input schema. */
+    inputPaths?: string[];
   }
 
   let {
@@ -72,6 +75,7 @@
     onremovebranch,
     workflows = [],
     currentWorkflowName = '',
+    inputPaths = [],
   }: Props = $props();
 
   // ---------------------------------------------------------------------------
@@ -263,22 +267,16 @@
             {/if}
 
             {#if !isDefault}
-              <label class="field-label" for="branch-cond-{branch.id}">
+              <p class="field-label">
                 {t('inspector.switch.condition')}
-              </label>
-              <input
-                id="branch-cond-{branch.id}"
-                class="text-input text-input--mono"
-                type="text"
-                aria-label={t('inspector.switch.condition')}
+              </p>
+              <ValueSourceSelector
                 value={branch.condition ?? ''}
-                oninput={(e) =>
+                {inputPaths}
+                ariaLabel={t('inspector.switch.condition')}
+                onchange={(v) =>
                   handleSwitchUpdate(
-                    updateSwitchBranchCondition(
-                      switchNode,
-                      branch.id,
-                      e.currentTarget.value,
-                    ),
+                    updateSwitchBranchCondition(switchNode, branch.id, v),
                   )}
               />
               {#if emptyCondition}
@@ -474,7 +472,7 @@
 
     <!-- Task-specific or structural property editor -->
     {#if NodeEditor}
-      <NodeEditor {node} onupdate={(n) => onupdate?.(n)} />
+      <NodeEditor {node} {inputPaths} onupdate={(n) => onupdate?.(n)} />
     {/if}
 
     <!-- Common fields: if + metadata — present on all node types -->
@@ -700,10 +698,6 @@
     background: #fff;
     box-sizing: border-box;
     margin-bottom: 0.2rem;
-  }
-
-  .text-input--mono {
-    font-family: monospace;
   }
 
   .text-input:focus {

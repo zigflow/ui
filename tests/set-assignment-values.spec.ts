@@ -38,10 +38,17 @@ async function openGreetInspector(page: Page) {
 }
 
 /**
- * Add a new assignment row, set its key and value (both cleared and re-typed
- * so the test is idempotent across re-runs), and return the new row locator.
+ * Add a new assignment row. Optionally selects a type override before filling
+ * the value (needed for non-string types since VSS no longer auto-coerces).
+ *
+ * When typeOverride is 'null', the value input is disabled — no fill is done.
  */
-async function addRow(page: Page, key: string, value: string) {
+async function addRow(
+  page: Page,
+  key: string,
+  value: string,
+  typeOverride?: string,
+) {
   const addBtn = page.getByRole('button', { name: '+ Add assignment' });
   const rows = page.locator('.assignment-item');
   const countBefore = await rows.count();
@@ -50,11 +57,21 @@ async function addRow(page: Page, key: string, value: string) {
   await expect(rows).toHaveCount(countBefore + 1);
 
   const newRow = rows.last();
-  const keyInput = newRow.getByRole('textbox').first();
-  await keyInput.fill(key);
+  // getByRole('textbox').first() reliably targets the key input because it
+  // appears before the VSS value input in DOM order.
+  await newRow.getByRole('textbox').first().fill(key);
 
-  const valueInput = newRow.getByLabel('Value');
-  await valueInput.fill(value);
+  if (typeOverride) {
+    // Selecting a non-string override hides the VSS and shows the plain input.
+    await newRow
+      .getByRole('combobox', { name: /Type for/ })
+      .selectOption(typeOverride);
+  }
+
+  // 'null' override immediately stores null and disables the value input.
+  if (typeOverride !== 'null') {
+    await newRow.getByLabel('Value').fill(value);
+  }
 
   return newRow;
 }
@@ -77,11 +94,20 @@ async function exportYaml(page: Page): Promise<string> {
 // ---------------------------------------------------------------------------
 
 test.describe('Set assignment value types', () => {
-  test('auto mode: boolean true — YAML emits unquoted true', async ({
+  // -------------------------------------------------------------------------
+  // Non-string types: must use the type-override dropdown to force the type.
+  // ValueSourceSelector (used for string values) stores all values verbatim
+  // as strings — no auto-coercion. Selecting 'boolean', 'number', or 'null'
+  // hides the VSS and shows a plain typed input instead.
+  // -------------------------------------------------------------------------
+
+  test('boolean override: true stored as unquoted boolean in YAML', async ({
     page,
   }) => {
     await openGreetInspector(page);
-    await addRow(page, 'pw-bool', 'true');
+    // Selecting 'boolean' override makes the VSS disappear; 'true' is then
+    // typed into the plain text input and coerced to boolean.
+    await addRow(page, 'pw-bool', 'true', 'boolean');
 
     const yaml = await exportYaml(page);
     // js-yaml emits boolean true without quotes.
@@ -91,9 +117,11 @@ test.describe('Set assignment value types', () => {
     expect(yaml).not.toMatch(/pw-bool:\s+"true"/);
   });
 
-  test('auto mode: number — YAML emits unquoted integer', async ({ page }) => {
+  test('number override: integer stored as unquoted number in YAML', async ({
+    page,
+  }) => {
     await openGreetInspector(page);
-    await addRow(page, 'pw-num', '123');
+    await addRow(page, 'pw-num', '123', 'number');
 
     const yaml = await exportYaml(page);
     expect(yaml).toMatch(/pw-num:\s+123(?!\d)/);
@@ -101,9 +129,11 @@ test.describe('Set assignment value types', () => {
     expect(yaml).not.toMatch(/pw-num:\s+'123'/);
   });
 
-  test('auto mode: plain string — YAML emits unquoted string', async ({
+  test('literal mode: plain string stored as unquoted string in YAML', async ({
     page,
   }) => {
+    // 'hello' does not require type-coercion — VSS literal mode stores it as
+    // a string and js-yaml emits it without quotes.
     await openGreetInspector(page);
     await addRow(page, 'pw-str', 'hello');
 
@@ -111,9 +141,12 @@ test.describe('Set assignment value types', () => {
     expect(yaml).toMatch(/pw-str:\s+hello/);
   });
 
-  test('auto mode: object input — shows validation error, YAML unchanged', async ({
+  test('literal mode: object-like strings are stored verbatim without error', async ({
     page,
   }) => {
+    // VSS literal mode stores any string verbatim — no validation fires.
+    // (The old plain-input "objects not supported" error only applied to
+    // auto-coerce mode; it no longer applies to the VSS path.)
     await openGreetInspector(page);
 
     const addBtn = page.getByRole('button', { name: '+ Add assignment' });
@@ -124,22 +157,19 @@ test.describe('Set assignment value types', () => {
     await expect(rows).toHaveCount(countBefore + 1);
 
     const newRow = rows.last();
-
-    // Set a stable key first.
     await newRow.getByRole('textbox').first().fill('pw-obj');
 
-    // Type an object into the value input.
     const valueInput = newRow.getByLabel('Value');
     await valueInput.fill('{ "a": 1 }');
 
-    // Error message must be visible.
+    // No validation error must appear.
     await expect(
       page.getByText('Objects and arrays are not supported'),
-    ).toBeVisible();
+    ).toHaveCount(0);
 
-    // YAML export must NOT contain pw-obj (row was never persisted with object).
+    // The key is present in the YAML (emitted by handleKeyChange).
     const yaml = await exportYaml(page);
-    expect(yaml).not.toContain('pw-obj:');
+    expect(yaml).toContain('pw-obj:');
   });
 
   test('string override: "true" is stored as quoted string in YAML', async ({
@@ -170,20 +200,26 @@ test.describe('Set assignment value types', () => {
     expect(yaml).toMatch(/pw-strover:\s+'true'/);
   });
 
-  test('auto mode: float — YAML emits unquoted float', async ({ page }) => {
+  test('number override: float stored as unquoted float in YAML', async ({
+    page,
+  }) => {
     await openGreetInspector(page);
-    await addRow(page, 'pw-float', '3.14');
+    await addRow(page, 'pw-float', '3.14', 'number');
 
     const yaml = await exportYaml(page);
     expect(yaml).toMatch(/pw-float:\s+3\.14/);
   });
 
-  test('auto mode: null — YAML emits null', async ({ page }) => {
+  test('literal mode: the string "null" is stored as a quoted string', async ({
+    page,
+  }) => {
+    // VSS literal mode does not coerce 'null' to YAML null. The string is
+    // stored as-is and js-yaml emits it quoted to distinguish from null.
     await openGreetInspector(page);
-    await addRow(page, 'pw-null-auto', 'null');
+    await addRow(page, 'pw-str-null', 'null');
 
     const yaml = await exportYaml(page);
-    expect(yaml).toMatch(/pw-null-auto:\s+null/);
+    expect(yaml).toMatch(/pw-str-null:\s+'null'/);
   });
 
   test('null override — value input is disabled and YAML emits null', async ({

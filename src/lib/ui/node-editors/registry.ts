@@ -40,6 +40,8 @@ import WaitNodeEditor from './WaitNodeEditor.svelte';
 export interface NodeEditorProps {
   node: Node;
   onupdate: (node: Node) => void;
+  /** Flat dot-notation paths from the workflow input schema. Optional. */
+  inputPaths?: string[];
 }
 
 // Cast is intentional: each editor declares a narrower Props type internally

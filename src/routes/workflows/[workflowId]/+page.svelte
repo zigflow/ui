@@ -48,6 +48,7 @@
   import ContextIndicator from '$lib/ui/ContextIndicator.svelte';
   import Inspector from '$lib/ui/Inspector.svelte';
   import Sidebar from '$lib/ui/Sidebar.svelte';
+  import { extractInputPaths } from '$lib/ui/value-source';
   import { onMount, untrack } from 'svelte';
 
   import type { PageProps } from './$types';
@@ -364,6 +365,9 @@
   );
   const inspectorCurrentWorkflowName = $derived(
     workflowFile.workflows[selectedWorkflowId]?.name ?? '',
+  );
+  const inspectorInputPaths = $derived(
+    extractInputPaths(workflowFile.input.schema.document),
   );
   let selectedNodeId = $state<string | null>(_initialParsed.selectedNodeId);
   // Controls whether the Inspector panel is open. Initialised from the URL so
@@ -1010,6 +1014,7 @@
         onremovebranch={handleRemoveBranch}
         workflows={inspectorWorkflows}
         currentWorkflowName={inspectorCurrentWorkflowName}
+        inputPaths={inspectorInputPaths}
       />
     </div>
   </div>
